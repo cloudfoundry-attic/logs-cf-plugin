@@ -1,0 +1,4 @@
+script: 'bundle exec rake'
+bundler_args: "--without development"
+rvm:
+  - ruby-1.9.3
