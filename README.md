@@ -1,4 +1,4 @@
-# Tail-Cf-Plugin
+# Tail-Cf-Plugin [![Build Status](https://travis-ci.org/cloudfoundry/tail-cf-plugin.png?branch=master)](https://travis-ci.org/cloudfoundry/tail-cf-plugin)
 
 Plugin to cf command to add streaming application logs.
 
