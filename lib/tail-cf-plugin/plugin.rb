@@ -1,13 +1,14 @@
+require 'tail-cf-plugin/loggregrator_client'
+
 module TailCfPlugin
   class Plugin < CF::CLI
-    def precondition
-      # skip all default preconditions
-    end
 
     desc "Tail a CF application's logs"
     group :apps
+    input :loggregator_host, :argument => :required, :desc => "The ip:port of the loggregator"
     def tail
-      puts "Hello from tail"
+      loggregrator_client = LoggregatorClient.new(STDOUT)
+      loggregrator_client.listen(input[:loggregator_host])
     end
   end
 end

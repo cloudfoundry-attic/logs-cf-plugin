@@ -9,7 +9,5 @@ gemspec
 group :test do
   gem "rake"
   gem "rspec"
-  gem "fakefs"
-  gem "rr"
-  gem "debugger"
+  gem 'thin'
 end
