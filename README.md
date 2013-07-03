@@ -36,3 +36,14 @@ Follow these steps to make a contribution to any of our open source repositories
 1. Make your changes on a topic branch, commit, and push to github and open a pull request.
 
 Once your commits are approved by Travis CI and reviewed by the core team, they will be merged.
+
+#### Checkout
+
+    git clone git@github.com:cloudfoundry/tail-cf-plugin.git
+    cd tail-cf-plugin/
+    bundle
+
+#### Running tests
+
+    rake
+
