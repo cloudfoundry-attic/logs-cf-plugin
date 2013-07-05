@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "tail-cf-plugin"
-  spec.version       = '0.0.1'
+  spec.version       = '0.0.2'
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ["Pivotal"]
   spec.email         = ["support@cloudfoundry.gor"]
@@ -16,6 +16,6 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
 
-  spec.add_dependency "cf", "~>3.0.0"
+  spec.add_dependency "cf", "~>4.1.1"
   spec.add_dependency "faye-websocket", "~> 0.6.1"
 end
