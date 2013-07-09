@@ -1,5 +1,5 @@
 require 'support/fake_loggregator'
-require 'tail-cf-plugin'
+require 'tail-cf-plugin/plugin'
 require 'thin'
 
 describe TailCfPlugin::LoggregatorClient do
