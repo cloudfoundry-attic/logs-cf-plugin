@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.version       = '0.0.3'
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ["Pivotal"]
-  spec.email         = ["support@cloudfoundry.gor"]
+  spec.email         = ["vcap-dev@googlegroups.com"]
   spec.description   = "CF command line tool to tail CF Application Logs"
   spec.summary       = "CF Tail"
   spec.homepage      = "http://github.com/cloudfoundry/tail-cf-plugin"
