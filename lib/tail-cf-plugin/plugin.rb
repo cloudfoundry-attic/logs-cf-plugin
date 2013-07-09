@@ -1,5 +1,3 @@
-require 'tail-cf-plugin/loggregrator_client'
-
 module TailCfPlugin
   class Plugin < CF::CLI
 

@@ -1,5 +1,5 @@
 require 'support/fake_loggregator'
-require 'tail-cf-plugin/loggregrator_client'
+require 'tail-cf-plugin'
 require 'thin'
 
 describe TailCfPlugin::LoggregatorClient do
@@ -15,7 +15,7 @@ describe TailCfPlugin::LoggregatorClient do
       loggregator_client.listen('localhost:9001')
     end
 
-    expect(server_response).to eq("Hello\n")
+    expect(server_response).to eq("1234 5678 STDOUT Hello\n")
 
     Thread.kill(client_thread)
     fake_server.stop

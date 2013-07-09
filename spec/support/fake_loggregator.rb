@@ -9,7 +9,7 @@ module TailCfPlugin
         ws = Faye::WebSocket.new(env)
 
         ws.on :open do |event|
-          ws.send("Hello".unpack("U*"))
+          ws.send(log_message)
         end
 
         # Return async Rack response
@@ -41,5 +41,17 @@ module TailCfPlugin
     private
 
     attr_reader :port, :em_server_thread
+
+    def log_message
+      message = LogMessage.new()
+      message.timestamp = Time.now.to_i * 1000 * 1000 * 1000
+      message.message = "Hello"
+      message.message_type = LogMessage::MessageType::OUT
+      message.app_id = "1234"
+      message.source_id = "5678"
+      message.source_type = LogMessage::SourceType::DEA
+      result = message.encode.buf
+      result.unpack("C*")
+    end
   end
 end
