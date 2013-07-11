@@ -4,8 +4,8 @@ module TailCfPlugin
       @output = output
     end
 
-    def listen(loggregator_host, app_id)
-      websocket_address = "ws://#{loggregator_host}/tail/#{app_id}"
+    def listen(loggregator_host, app_id, user_token)
+      websocket_address = "ws://#{loggregator_host}/tail/#{app_id}?authorization=#{URI.encode(user_token)}"
 
       EM.run {
         ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => "http://localhost"})

@@ -7,6 +7,7 @@ module TailCfPlugin
   require 'log_message/log_message.pb'
 
   class Plugin < CF::CLI
+    include LoginRequirements
 
     desc "Tail a CF application's logs"
     group :apps
@@ -15,7 +16,7 @@ module TailCfPlugin
 
     def tail
       loggregrator_client = LoggregatorClient.new(STDOUT)
-      loggregrator_client.listen(input[:loggregator_host], input[:app].guid)
+      loggregrator_client.listen(input[:loggregator_host], input[:app].guid, client.token.auth_header)
     end
   end
 end
