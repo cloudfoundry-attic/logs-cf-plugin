@@ -8,7 +8,7 @@ module TailCfPlugin
       websocket_address = "ws://#{loggregator_host}/tail/#{app_id}"
 
       EM.run {
-        ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => { "Origin" => "http://localhost" } )
+        ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => "http://localhost"})
 
         ws.on :message do |event|
           received_message = LogMessage.decode(event.data.pack("C*"))
