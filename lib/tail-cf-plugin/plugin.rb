@@ -19,7 +19,7 @@ module TailCfPlugin
 
       raise "Missing an app or space" unless input[:app] || input[:space]
 
-      space_guid = (input[:space] && input[:space].guid) || input[:app].space_guid
+      space_guid = (input[:space] && input[:space].guid) || input[:app].space.guid
       app_guid = input[:app] && input[:app].guid
 
       loggregrator_client = LoggregatorClient.new(STDOUT)
