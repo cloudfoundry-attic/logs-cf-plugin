@@ -9,21 +9,28 @@ module TailCfPlugin
   class Plugin < CF::CLI
     include LoginRequirements
 
-    desc "Tail a CF application's logs"
+    desc "Tail logs for CF applications or spaces"
     group :apps
     input :loggregator_host, :argument => :required, :desc => "The ip:port of the loggregator"
     input :app, :desc => "App to tail logs from", :argument => :optional, :from_given => by_name(:app)
-    input :space, :desc => "App to tail logs from", :argument => :optional, :from_given => by_name(:space)
+    input :space, :type => :boolean, :desc => "Logs of all apps in the current space", :default => false
 
     def tail
-
-      raise "Missing an app or space" unless input[:app] || input[:space]
-
-      space_guid = (input[:space] && input[:space].guid) || input[:app].space.guid
-      app_guid = input[:app] && input[:app].guid
+      if input[:space]
+        app_guid = nil
+      else
+        unless input[:app]
+          Mothership::Help.command_help(@@commands[:tail])
+          fail "Please provide an application to log or call with --space"
+        end
+        app_guid = input[:app].guid
+      end
 
       loggregrator_client = LoggregatorClient.new(STDOUT)
-      loggregrator_client.listen(input[:loggregator_host], space_guid, app_guid, client.token.auth_header)
+      loggregrator_client.listen(input[:loggregator_host], client.current_space.guid, app_guid, client.token.auth_header)
     end
+
+    ::ManifestsPlugin.default_to_app_from_manifest(:tail, false)
+
   end
 end
