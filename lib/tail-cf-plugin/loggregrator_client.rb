@@ -23,7 +23,8 @@ module TailCfPlugin
         end
 
         ws.on :close do |event|
-          output.puts("Server dropped connection")
+          output.puts("Server dropped connection...goodbye.")
+          EM.stop
         end
       }
     end
