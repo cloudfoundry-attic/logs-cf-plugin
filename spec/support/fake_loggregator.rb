@@ -6,22 +6,12 @@ module TailCfPlugin
 
     def start
       app = lambda do |env|
-        ws = Faye::WebSocket.new(env)
-
-        ws.on :open do |event|
-          ws.send(log_message)
-        end
-
-        # Return async Rack response
-        ws.rack_response
+        [200, {}, [log_message]]
       end
 
-      Faye::WebSocket.load_adapter('thin')
-      @em_server_thread = Thread.new do
-        EM.run {
-          thin = Rack::Handler.get('thin')
-          thin.run(app, :Port => port)
-        }
+      @server_thread = Thread.new do
+        thin = Rack::Handler.get('thin')
+        thin.run(app, :Port => port)
       end
 
       tries = 0
@@ -35,12 +25,12 @@ module TailCfPlugin
     end
 
     def stop
-      Thread.kill(em_server_thread)
+      Thread.kill(server_thread)
     end
 
     private
 
-    attr_reader :port, :em_server_thread
+    attr_reader :port, :server_thread
 
     def log_message
       message = LogMessage.new()
@@ -50,8 +40,7 @@ module TailCfPlugin
       message.app_id = "1234"
       message.source_id = "5678"
       message.source_type = LogMessage::SourceType::DEA
-      result = message.encode.buf
-      result.unpack("C*")
+      message.encode.buf
     end
   end
 end
