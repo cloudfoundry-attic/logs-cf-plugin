@@ -24,11 +24,11 @@ describe TailCfPlugin::LoggregatorClient do
     plugin.stub(:client).and_return(double("client",
                                            token: double("token", {auth_header: "auth_header"}),
                                            current_space: double("space", guid: 'space_id'),
-                                           target: "http://ccng.subdomain.cfapp.com"
+                                           target: "http://some_cc.subdomain.cfapp.com"
                                     ))
 
     TailCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).
-        with('http://loggregator.subdomain.cfapp.com', 'space_id', 'app_id', "auth_header")
+        with('loggregator.subdomain.cfapp.com', 'space_id', 'app_id', "auth_header")
     plugin.tail
   end
 
@@ -42,11 +42,11 @@ describe TailCfPlugin::LoggregatorClient do
     plugin.stub(:client).and_return(double("client",
                                            token: double("token", {auth_header: "auth_header"}),
                                            current_space: double("space", guid: 'space_id'),
-                                           target: "http://ccng.subdomain.cfapp.com"
+                                           target: "http://some_cc.subdomain.cfapp.com"
                                     ))
 
     TailCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).
-        with('http://loggregator.subdomain.cfapp.com', 'space_id', nil, "auth_header")
+        with('loggregator.subdomain.cfapp.com', 'space_id', nil, "auth_header")
     plugin.tail
   end
 end

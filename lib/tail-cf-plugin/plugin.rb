@@ -1,9 +1,10 @@
 require 'cf'
+require 'faye/websocket'
+require 'eventmachine'
 
 module TailCfPlugin
   require 'tail-cf-plugin/loggregator_client'
   require 'log_message/log_message.pb'
-  require 'uri'
 
   class Plugin < CF::CLI
     include LoginRequirements
@@ -33,9 +34,8 @@ module TailCfPlugin
     private
 
     def loggregator_host
-      url = URI.parse(client.target)
-      domain = url.host.split(".")[1..-1].join(".")
-      "#{url.scheme}://loggregator.#{domain}"
+      target_base = client.target.sub(/^https?:\/\/([^\.]+\.)?(.+)\/?/, '\2')
+      "loggregator.#{target_base}"
     end
 
   end

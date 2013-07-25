@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "tail-cf-plugin"
-  spec.version       = '0.0.12.pre'
+  spec.version       = '0.0.11.pre'
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ["Pivotal"]
   spec.email         = ["vcap-dev@googlegroups.com"]
@@ -17,5 +17,6 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
 
   spec.add_dependency "cf", ">= 4.2.5", "< 5.0"
+  spec.add_dependency "faye-websocket", "~> 0.6.1"
   spec.add_dependency "beefcake", "~> 0.3.7"
 end

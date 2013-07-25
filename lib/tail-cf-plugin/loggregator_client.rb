@@ -5,26 +5,28 @@ module TailCfPlugin
     end
 
     def listen(loggregator_host, space_id, app_id, user_token)
-      address = "#{loggregator_host}/tail/spaces/#{space_id}"
-      address += "/apps/#{app_id}" if app_id
+      websocket_address = "ws://#{loggregator_host}/tail/spaces/#{space_id}"
+      websocket_address += "/apps/#{app_id}" if app_id
 
-      address += "?authorization=#{URI.encode(user_token)}"
+      websocket_address += "?authorization=#{URI.encode(user_token)}"
 
-      uri = URI.parse(address)
-      http = Net::HTTP.new(uri.host, uri.port)
-      if uri.scheme == 'https'
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
+      EM.run {
+        ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => "http://localhost"})
 
-      request = Net::HTTP::Get.new uri.request_uri
-      output.puts "Connected to #{loggregator_host}"
-      http.request request do |response|
-        response.read_body do |chunk|
-          received_message = LogMessage.decode(chunk)
+        ws.on :message do |event|
+          received_message = LogMessage.decode(event.data.pack("C*"))
           output.puts([received_message.app_id, received_message.source_id, received_message.message_type_name, received_message.message].join(" "))
         end
-      end
+
+        ws.on :error do |event|
+          output.puts("Server error")
+        end
+
+        ws.on :close do |event|
+          output.puts("Server dropped connection...goodbye.")
+          EM.stop
+        end
+      }
     end
 
     private

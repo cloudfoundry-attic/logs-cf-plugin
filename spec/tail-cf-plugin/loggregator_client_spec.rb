@@ -14,30 +14,31 @@ describe TailCfPlugin::LoggregatorClient do
     fake_server.start
 
     client_thread = Thread.new do
-      loggregator_client.listen("http://localhost:#{loggregator_port}", "space_id", "something", "auth_token")
+      loggregator_client.listen("localhost:#{loggregator_port}", "space_id", "something", "auth_token")
     end
 
-    expect(server_response).to eq("Connected to http://localhost:9999\n1234 5678 STDOUT Hello\n")
+    expect(server_response).to eq("1234 5678 STDOUT Hello\n")
 
     Thread.kill(client_thread)
     fake_server.stop
   end
 
   it "constructs a query url with space_id, app_id and uri encoded authorization token" do
+    EM.stub(:run).and_yield
 
-    mock_http = double("http").as_null_object
-    mock_request = double("request").as_null_object
-    Net::HTTP.should_receive(:new).and_return(mock_http)
-    Net::HTTP::Get.should_receive(:new).with("/tail/spaces/space_id/apps/app_id?authorization=auth%20token").and_return(mock_request)
-    loggregator_client.listen('http://localhost', 'space_id', 'app_id', "auth token")
+    mock_ws_server = double("mock_ws_server").as_null_object
+
+    Faye::WebSocket::Client.should_receive(:new).with("ws://host/tail/spaces/space_id/apps/app_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
+    loggregator_client.listen('host', 'space_id', 'app_id', "auth token")
   end
 
   it "constructs a query url with space_id and uri encoded authorization token" do
-    mock_http = double("http").as_null_object
-    mock_request = double("request").as_null_object
-    Net::HTTP.should_receive(:new).and_return(mock_http)
-    Net::HTTP::Get.should_receive(:new).with("/tail/spaces/space_id?authorization=auth%20token").and_return(mock_request)
-    loggregator_client.listen('http://localhost', 'space_id', nil, "auth token")
+    EM.stub(:run).and_yield
+
+    mock_ws_server = double("mock_ws_server").as_null_object
+
+    Faye::WebSocket::Client.should_receive(:new).with("ws://host/tail/spaces/space_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
+    loggregator_client.listen('host', 'space_id', nil, "auth token")
   end
 
   def server_response
