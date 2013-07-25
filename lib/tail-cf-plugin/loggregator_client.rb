@@ -20,14 +20,9 @@ module TailCfPlugin
       request = Net::HTTP::Get.new uri.request_uri
       output.puts "Connected to #{loggregator_host}"
       http.request request do |response|
-        case response.code.to_i
-          when 200
-            response.read_body do |chunk|
-              received_message = LogMessage.decode(chunk)
-              output.puts([received_message.app_id, received_message.source_id, received_message.message_type_name, received_message.message].join(" "))
-            end
-          else
-            output.puts("Error #{response.code}: #{response.body}")
+        response.read_body do |chunk|
+          received_message = LogMessage.decode(chunk)
+          output.puts([received_message.app_id, received_message.source_id, received_message.message_type_name, received_message.message].join(" "))
         end
       end
     end

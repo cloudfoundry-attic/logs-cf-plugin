@@ -23,20 +23,6 @@ describe TailCfPlugin::LoggregatorClient do
     fake_server.stop
   end
 
-  it "outputs non-200 erros from the server" do
-    loggregator_port = 9999
-
-    fake_server = TailCfPlugin::FakeLoggregator.new(loggregator_port, true)
-    fake_server.start
-
-    client_thread = Thread.new do
-      loggregator_client.listen("http://localhost:#{loggregator_port}", "space_id", "something", "bad_token")
-    end
-
-    expect(server_response).to eq("Connected to http://localhost:9999\nError 401: Unauthorized\n")
-
-  end
-
   it "constructs a query url with space_id, app_id and uri encoded authorization token" do
 
     mock_http = double("http").as_null_object

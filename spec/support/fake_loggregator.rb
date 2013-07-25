@@ -1,17 +1,12 @@
 module TailCfPlugin
   class FakeLoggregator
-    def initialize(port, fails = false)
+    def initialize(port)
       @port = port
-      @fails = fails
     end
 
     def start
       app = lambda do |env|
-        if fails
-          [401, {}, ["Unauthorized"]]
-        else
-          [200, {}, [log_message]]
-        end
+        [200, {}, [log_message]]
       end
 
       @server_thread = Thread.new do
@@ -35,7 +30,7 @@ module TailCfPlugin
 
     private
 
-    attr_reader :port, :server_thread, :fails
+    attr_reader :port, :server_thread
 
     def log_message
       message = LogMessage.new()
