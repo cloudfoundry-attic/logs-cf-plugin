@@ -1,3 +1,5 @@
+require 'faye/websocket'
+
 module TailCfPlugin
   class FakeLoggregator
     def initialize(port)

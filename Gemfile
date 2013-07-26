@@ -1,13 +1,5 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in tail-cf-plugin.gemspec
 gemspec
 
-
-gemspec
-
-group :test do
-  gem "rake"
-  gem "rspec"
-  gem 'thin'
-end
+gem "celluloid-websocket-client", git: "https://github.com/msgehard/celluloid-websocket-client"

@@ -17,6 +17,11 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
 
   spec.add_dependency "cf", ">= 4.2.5", "< 5.0"
-  spec.add_dependency "faye-websocket", "~> 0.6.1"
   spec.add_dependency "beefcake", "~> 0.3.7"
+  spec.add_dependency "celluloid-websocket-client", "~> 0.0.1"
+
+  spec.add_development_dependency "rake"
+  spec.add_development_dependency "rspec"
+  spec.add_development_dependency "thin"
+  spec.add_development_dependency "faye-websocket"
 end

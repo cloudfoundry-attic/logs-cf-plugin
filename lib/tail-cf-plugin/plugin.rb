@@ -1,6 +1,4 @@
 require 'cf'
-require 'faye/websocket'
-require 'eventmachine'
 
 module TailCfPlugin
   require 'tail-cf-plugin/loggregator_client'
@@ -27,6 +25,7 @@ module TailCfPlugin
 
       loggregator_client = LoggregatorClient.new(STDOUT)
       loggregator_client.listen(loggregator_host, client.current_space.guid, app_guid, client.token.auth_header)
+      wait_for_ws_connection_close
     end
 
     ::ManifestsPlugin.default_to_app_from_manifest(:tail, false)
@@ -36,6 +35,10 @@ module TailCfPlugin
     def loggregator_host
       target_base = client.target.sub(/^https?:\/\/([^\.]+\.)?(.+)\/?/, '\2')
       "loggregator.#{target_base}"
+    end
+
+    def wait_for_ws_connection_close
+      sleep
     end
 
   end
