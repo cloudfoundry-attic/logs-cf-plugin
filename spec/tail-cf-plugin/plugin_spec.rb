@@ -1,10 +1,6 @@
 require 'tail-cf-plugin/plugin'
 
 describe TailCfPlugin::LoggregatorClient do
-  before do
-    TailCfPlugin::Plugin.any_instance.stub(:wait_for_ws_connection_close)
-  end
-
   it "shows the help and fails if neither app nor space are given" do
     plugin = TailCfPlugin::Plugin.new
     plugin.input = {

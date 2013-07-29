@@ -17,27 +17,27 @@ describe TailCfPlugin::LoggregatorClient do
       loggregator_client.listen("localhost:#{loggregator_port}", "space_id", "something", "auth_token")
     end
 
-    expect(server_response).to eq("Connected to server.\n1234 5678 STDOUT Hello\n")
+    expect(server_response).to eq("1234 5678 STDOUT Hello\n")
 
     Thread.kill(client_thread)
     fake_server.stop
   end
 
   it "constructs a query url with space_id, app_id and uri encoded authorization token" do
-    #EM.stub(:run).and_yield
+    EM.stub(:run).and_yield
 
     mock_ws_server = double("mock_ws_server").as_null_object
 
-    Celluloid::WebSocket::Client.should_receive(:new).with("ws://host/tail/spaces/space_id/apps/app_id?authorization=auth%20token", anything, headers: {"Origin" => "http://localhost" }).and_return(mock_ws_server)
+    Faye::WebSocket::Client.should_receive(:new).with("ws://host/tail/spaces/space_id/apps/app_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
     loggregator_client.listen('host', 'space_id', 'app_id', "auth token")
   end
 
   it "constructs a query url with space_id and uri encoded authorization token" do
-    #EM.stub(:run).and_yield
+    EM.stub(:run).and_yield
 
     mock_ws_server = double("mock_ws_server").as_null_object
 
-    Celluloid::WebSocket::Client.should_receive(:new).with("ws://host/tail/spaces/space_id?authorization=auth%20token", anything, headers: {"Origin" => "http://localhost" }).and_return(mock_ws_server)
+    Faye::WebSocket::Client.should_receive(:new).with("ws://host/tail/spaces/space_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
     loggregator_client.listen('host', 'space_id', nil, "auth token")
   end
 

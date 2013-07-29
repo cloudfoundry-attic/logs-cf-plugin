@@ -1,8 +1,7 @@
 source 'https://rubygems.org'
 
+# Specify your gem's dependencies in tail-cf-plugin.gemspec
 gemspec
-
-gem "celluloid-websocket-client", git: "https://github.com/msgehard/celluloid-websocket-client"
 
 # These are here because Travis bundles without development
 group :test do
