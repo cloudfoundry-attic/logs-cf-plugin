@@ -5,7 +5,7 @@ module TailCfPlugin
     end
 
     def listen(loggregator_host, space_id, app_id, user_token)
-      websocket_address = "ws://#{loggregator_host}/tail/spaces/#{space_id}"
+      websocket_address = "wss://#{loggregator_host}/tail/spaces/#{space_id}"
       websocket_address += "/apps/#{app_id}" if app_id
 
       websocket_address += "?authorization=#{URI.encode(user_token)}"

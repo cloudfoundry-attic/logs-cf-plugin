@@ -28,7 +28,7 @@ describe TailCfPlugin::LoggregatorClient do
 
     mock_ws_server = double("mock_ws_server").as_null_object
 
-    Faye::WebSocket::Client.should_receive(:new).with("ws://host/tail/spaces/space_id/apps/app_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
+    Faye::WebSocket::Client.should_receive(:new).with("wss://host/tail/spaces/space_id/apps/app_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
     loggregator_client.listen('host', 'space_id', 'app_id', "auth token")
   end
 
@@ -37,7 +37,7 @@ describe TailCfPlugin::LoggregatorClient do
 
     mock_ws_server = double("mock_ws_server").as_null_object
 
-    Faye::WebSocket::Client.should_receive(:new).with("ws://host/tail/spaces/space_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
+    Faye::WebSocket::Client.should_receive(:new).with("wss://host/tail/spaces/space_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
     loggregator_client.listen('host', 'space_id', nil, "auth token")
   end
 
