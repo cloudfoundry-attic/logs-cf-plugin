@@ -8,16 +8,14 @@ describe TailCfPlugin::LoggregatorClient do
   subject(:loggregator_client) { described_class.new(fake_output) }
 
   it "outputs data from the server" do
-    loggregator_port = 9999
-
-    fake_server = TailCfPlugin::FakeLoggregator.new(loggregator_port)
+    fake_server = TailCfPlugin::FakeLoggregator.new(4443)
     fake_server.start
 
     client_thread = Thread.new do
-      loggregator_client.listen("localhost:#{loggregator_port}", "space_id", "something", "auth_token")
+      loggregator_client.listen("localhost", "space_id", "something", "auth_token")
     end
 
-    expect(server_response).to eq("1234 5678 STDOUT Hello\n")
+    expect(server_response).to eq("Connected to server.\n1234 5678 STDOUT Hello\n")
 
     Thread.kill(client_thread)
     fake_server.stop
@@ -28,7 +26,7 @@ describe TailCfPlugin::LoggregatorClient do
 
     mock_ws_server = double("mock_ws_server").as_null_object
 
-    Faye::WebSocket::Client.should_receive(:new).with("wss://host/tail/spaces/space_id/apps/app_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
+    Faye::WebSocket::Client.should_receive(:new).with("wss://host:4443/tail/spaces/space_id/apps/app_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
     loggregator_client.listen('host', 'space_id', 'app_id', "auth token")
   end
 
@@ -37,7 +35,7 @@ describe TailCfPlugin::LoggregatorClient do
 
     mock_ws_server = double("mock_ws_server").as_null_object
 
-    Faye::WebSocket::Client.should_receive(:new).with("wss://host/tail/spaces/space_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
+    Faye::WebSocket::Client.should_receive(:new).with("wss://host:4443/tail/spaces/space_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
     loggregator_client.listen('host', 'space_id', nil, "auth token")
   end
 

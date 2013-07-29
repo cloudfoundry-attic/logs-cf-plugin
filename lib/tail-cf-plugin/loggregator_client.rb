@@ -13,6 +13,10 @@ module TailCfPlugin
       EM.run {
         ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => "http://localhost"})
 
+        ws.on :open do |event|
+          output.puts("Connected to server.")
+        end
+
         ws.on :message do |event|
           received_message = LogMessage.decode(event.data.pack("C*"))
           output.puts([received_message.app_id, received_message.source_id, received_message.message_type_name, received_message.message].join(" "))
