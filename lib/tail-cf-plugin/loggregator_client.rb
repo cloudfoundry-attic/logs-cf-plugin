@@ -15,6 +15,9 @@ module TailCfPlugin
 
         ws.on :open do |event|
           output.puts("Connected to server.")
+          EventMachine.add_periodic_timer(keep_alive_interval) do
+            ws.send([42])
+          end
         end
 
         ws.on :message do |event|
@@ -27,13 +30,19 @@ module TailCfPlugin
         end
 
         ws.on :close do |event|
+          ws.close
           output.puts("Server dropped connection...goodbye.")
           EM.stop
+          ws = nil
         end
       }
     end
 
     private
+
+    def keep_alive_interval
+      25
+    end
 
     attr_reader :output
   end

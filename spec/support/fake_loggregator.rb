@@ -1,7 +1,10 @@
 module TailCfPlugin
   class FakeLoggregator
+    attr_reader :messages
+
     def initialize(port)
       @port = port
+      @messages = []
     end
 
     def start
@@ -10,6 +13,10 @@ module TailCfPlugin
 
         ws.on :open do |event|
           ws.send(log_message)
+        end
+
+        ws.on :message do |event|
+          @messages << event.data
         end
 
         # Return async Rack response

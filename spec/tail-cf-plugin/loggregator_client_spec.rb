@@ -39,6 +39,25 @@ describe TailCfPlugin::LoggregatorClient do
     loggregator_client.listen('host', 'space_id', nil, "auth token")
   end
 
+  it "sends a keep alive every configured interval" do
+    TailCfPlugin::LoggregatorClient.any_instance.stub(:keep_alive_interval).and_return(1)
+
+    fake_server = TailCfPlugin::FakeLoggregator.new(4443)
+    fake_server.start
+
+    client_thread = Thread.new do
+      loggregator_client.listen("localhost", "space_id", "something", "auth_token")
+    end
+
+    sleep 2.5
+
+    expect(fake_server.messages).to eq([[42], [42]])
+
+    Thread.kill(client_thread)
+    fake_server.stop
+
+  end
+
   def server_response
     tries = 0
     loop do
