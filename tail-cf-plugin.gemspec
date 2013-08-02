@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "tail-cf-plugin"
-  spec.version       = '0.0.16.pre'
+  spec.version       = '0.0.17.pre'
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ["Pivotal"]
   spec.email         = ["vcap-dev@googlegroups.com"]
