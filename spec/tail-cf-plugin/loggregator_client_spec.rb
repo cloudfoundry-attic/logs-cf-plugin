@@ -63,7 +63,7 @@ describe TailCfPlugin::LoggregatorClient do
     loop do
       break if fake_output.string != ''
       tries += 1
-      raise 'No output recieved from server' if tries > 50
+      raise 'No output received from server' if tries > 50
       sleep(0.2)
     end
     fake_output.string

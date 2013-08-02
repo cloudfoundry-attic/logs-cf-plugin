@@ -1,10 +1,7 @@
 require 'cf'
-require 'faye/websocket'
-require 'eventmachine'
 
 module TailCfPlugin
   require 'tail-cf-plugin/loggregator_client'
-  require 'log_message/log_message.pb'
 
   class Plugin < CF::CLI
     include LoginRequirements

@@ -1,3 +1,7 @@
+require 'log_message/log_message.pb'
+require 'faye/websocket'
+require 'eventmachine'
+
 module TailCfPlugin
   class LoggregatorClient
     def initialize(output)
