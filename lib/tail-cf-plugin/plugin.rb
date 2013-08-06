@@ -11,12 +11,12 @@ module TailCfPlugin
     input :app, :desc => "App to tail logs from", :argument => :optional, :from_given => by_name(:app)
     input :space, :type => :boolean, :desc => "Logs of all apps in the current space", :default => false
 
-    def tail
+    def logs
       if input[:space]
         app_guid = nil
       else
         unless input[:app]
-          Mothership::Help.command_help(@@commands[:tail])
+          Mothership::Help.command_help(@@commands[:logs])
           fail "Please provide an application to log or call with --space"
         end
         app_guid = input[:app].guid
@@ -26,7 +26,7 @@ module TailCfPlugin
       loggregator_client.listen(loggregator_host, client.current_space.guid, app_guid, client.token.auth_header)
     end
 
-    ::ManifestsPlugin.default_to_app_from_manifest(:tail, false)
+    ::ManifestsPlugin.default_to_app_from_manifest(:logs, false)
 
     private
 

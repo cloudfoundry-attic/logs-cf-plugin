@@ -11,7 +11,7 @@ describe TailCfPlugin::LoggregatorClient do
     TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:listen)
     Mothership::Help.should_receive(:command_help)
     expect {
-      plugin.tail
+      plugin.logs
     }.to raise_exception
   end
 
@@ -29,7 +29,7 @@ describe TailCfPlugin::LoggregatorClient do
 
     TailCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).
         with('loggregator.subdomain.cfapp.com', 'space_id', 'app_id', "auth_header")
-    plugin.tail
+    plugin.logs
   end
 
   it "calls the loggregator_client for logging from the current space" do
@@ -47,6 +47,6 @@ describe TailCfPlugin::LoggregatorClient do
 
     TailCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).
         with('loggregator.subdomain.cfapp.com', 'space_id', nil, "auth_header")
-    plugin.tail
+    plugin.logs
   end
 end
