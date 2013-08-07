@@ -21,22 +21,27 @@ describe TailCfPlugin::LoggregatorClient do
     fake_server.stop
   end
 
-  it "constructs a query url with space_id, app_id and uri encoded authorization token" do
-    EM.stub(:run).and_yield
+  describe "the websocket request" do
+    let(:mock_ws_server) {double("mock_ws_server").as_null_object}
+    before do
+      EM.stub(:run).and_yield
+    end
 
-    mock_ws_server = double("mock_ws_server").as_null_object
+    it "constructs a query url with space_id, app_id and authorization header" do
+      Faye::WebSocket::Client.should_receive(:new).with("wss://host:4443/tail/spaces/space_id/apps/app_id", nil, anything).and_return(mock_ws_server)
+      loggregator_client.listen('host', 'space_id', 'app_id', "auth token")
+    end
 
-    Faye::WebSocket::Client.should_receive(:new).with("wss://host:4443/tail/spaces/space_id/apps/app_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
-    loggregator_client.listen('host', 'space_id', 'app_id', "auth token")
-  end
+    it "constructs a query url with space_id and uri encoded authorization token" do
+      Faye::WebSocket::Client.should_receive(:new).with("wss://host:4443/tail/spaces/space_id", nil, anything).and_return(mock_ws_server)
+      loggregator_client.listen('host', 'space_id', nil, "auth token")
+    end
 
-  it "constructs a query url with space_id and uri encoded authorization token" do
-    EM.stub(:run).and_yield
-
-    mock_ws_server = double("mock_ws_server").as_null_object
-
-    Faye::WebSocket::Client.should_receive(:new).with("wss://host:4443/tail/spaces/space_id?authorization=auth%20token", nil, anything).and_return(mock_ws_server)
-    loggregator_client.listen('host', 'space_id', nil, "auth token")
+    it "sends the authorization token as a header" do
+      headers = {"Origin" => "http://localhost", "Authorization" => "auth token"}
+      Faye::WebSocket::Client.should_receive(:new).with(anything, nil, :headers => headers).and_return(mock_ws_server)
+      loggregator_client.listen('host', 'space_id', 'app_id', "auth token")
+    end
   end
 
   it "sends a keep alive every configured interval" do
