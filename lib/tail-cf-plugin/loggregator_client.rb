@@ -11,8 +11,11 @@ module TailCfPlugin
     end
 
     def listen(space_id, app_id)
-      websocket_address = "wss://#{loggregator_host}:4443/tail/spaces/#{space_id}"
-      websocket_address += "/apps/#{app_id}" if app_id
+      params = []
+      params << "space=#{space_id}"
+      params << "app=#{app_id}" if app_id
+
+      websocket_address = "wss://#{loggregator_host}:4443/tail/?#{params.join("&")}"
 
       EM.run {
         ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => "http://localhost", "Authorization" => user_token})
@@ -43,7 +46,7 @@ module TailCfPlugin
     end
 
     def dump(space_id, app_id)
-      uri = URI.parse("http://#{loggregator_host}/dump/spaces/#{space_id}/apps/#{app_id}")
+      uri = URI.parse("http://#{loggregator_host}/dump/?space=#{space_id}&app=#{app_id}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE

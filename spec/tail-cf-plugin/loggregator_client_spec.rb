@@ -42,12 +42,12 @@ describe TailCfPlugin::LoggregatorClient do
       end
 
       it "constructs a query url with space_id and app_id" do
-        Faye::WebSocket::Client.should_receive(:new).with("wss://localhost:4443/tail/spaces/space_id/apps/app_id", nil, anything).and_return(mock_ws_server)
+        Faye::WebSocket::Client.should_receive(:new).with("wss://localhost:4443/tail/?space=space_id&app=app_id", nil, anything).and_return(mock_ws_server)
         loggregator_client.listen('space_id', 'app_id')
       end
 
       it "constructs a query url with space_id" do
-        Faye::WebSocket::Client.should_receive(:new).with("wss://localhost:4443/tail/spaces/space_id", nil, anything).and_return(mock_ws_server)
+        Faye::WebSocket::Client.should_receive(:new).with("wss://localhost:4443/tail/?space=space_id", nil, anything).and_return(mock_ws_server)
         loggregator_client.listen('space_id', nil)
       end
 
