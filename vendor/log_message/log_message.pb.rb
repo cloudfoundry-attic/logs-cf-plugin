@@ -23,6 +23,7 @@ class LogMessage
   required :app_id, :string, 4
   required :source_type, LogMessage::SourceType, 5
   optional :source_id, :string, 6
+  optional :space_id, :string, 7
 
   def message_type_name
     {MessageType::OUT => 'STDOUT', MessageType::ERR => 'STDERR'}[message_type]
