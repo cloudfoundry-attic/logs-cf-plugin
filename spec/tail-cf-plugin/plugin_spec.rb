@@ -3,16 +3,26 @@ require 'tail-cf-plugin/plugin'
 describe TailCfPlugin::LoggregatorClient do
   let(:plugin) { TailCfPlugin::Plugin.new }
 
-  let!(:client_double) {
-    double("client",
-           token: double("token", {auth_header: "auth_header"}),
-           current_space: double("space", guid: 'space_id'),
-           current_organization: double("org", guid: 'org_id'),
-           target: "http://some_cc.subdomain.cfapp.com"
-    )
-  }
+  it "should new up a loggregator client correctly" do
+    client_double = double("client",
+               token: double("token", {auth_header: "auth_header"}),
+               current_space: double("space", guid: 'space_id'),
+               current_organization: double("org", guid: 'org_id'),
+        )
 
-  let!(:app_double) { double("app", guid: 'app_id') }
+    plugin.input = {}
+    #yep. stubbing the object under test. better way to test this appreciated!
+    TailCfPlugin::Plugin.any_instance.stub(:client).and_return(client_double)
+    TailCfPlugin::Plugin.any_instance.stub(:loggregator_host).and_return("stubbed host")
+
+    mock_log_target = double("logtarget", :valid? => true, :ambiguous? => false, :query_params => {})
+    TailCfPlugin::LogTarget.stub(:new).and_return(mock_log_target)
+
+    mock_loggreator_client = double().as_null_object
+    TailCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT).and_return(mock_loggreator_client)
+
+    plugin.logs
+  end
 
   it "shows the help and fails if neither app nor space are given" do
     plugin.input = {
