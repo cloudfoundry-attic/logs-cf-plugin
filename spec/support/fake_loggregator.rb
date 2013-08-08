@@ -83,6 +83,7 @@ module TailCfPlugin
       message.message_type = LogMessage::MessageType::OUT
       message.app_id = "1234"
       message.source_id = "5678"
+      message.organization_id = "9876"
       message.source_type = LogMessage::SourceType::DEA
       result = message.encode.buf
       result.unpack("C*")
