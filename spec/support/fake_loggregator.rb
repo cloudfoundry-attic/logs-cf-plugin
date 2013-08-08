@@ -7,7 +7,7 @@ module TailCfPlugin
       @messages = []
     end
 
-    def start
+    def startListenEndpoint
       app = lambda do |env|
         ws = Faye::WebSocket.new(env)
 
@@ -23,6 +23,33 @@ module TailCfPlugin
         ws.rack_response
       end
 
+      runApp(app, port)
+    end
+
+    def startDumpEndpoint
+      app = lambda do |env|
+        request = Rack::Request.new(env)
+        if request.request_method == "GET" && request.path == "/dump/spaces/space_id/apps/app_id"
+          response = Rack::Response.new(["6bd8483a-7f7f-4e11-800a-4369501752c3  STDOUT Hello on STDOUT"], 200, {})
+          response.finish
+        else
+          response = Rack::Response.new(["Not found"], 404, {})
+          response.finish
+        end
+      end
+
+      runApp(app, port)
+    end
+
+    def stop
+      Thread.kill(em_server_thread)
+    end
+
+    private
+
+    attr_reader :port, :em_server_thread
+
+    def runApp(app, port)
       Faye::WebSocket.load_adapter('thin')
       @em_server_thread = Thread.new do
         EM.run {
@@ -32,7 +59,7 @@ module TailCfPlugin
             # You can set options on the server here, for example to set up SSL:
             server.ssl_options = {
                 :private_key_file => File.join(File.dirname(__FILE__), 'server.key'),
-                :cert_chain_file  => File.join(File.dirname(__FILE__), 'server.crt')
+                :cert_chain_file => File.join(File.dirname(__FILE__), 'server.crt')
             }
             server.ssl = true
           end
@@ -48,14 +75,6 @@ module TailCfPlugin
         sleep(0.2)
       end
     end
-
-    def stop
-      Thread.kill(em_server_thread)
-    end
-
-    private
-
-    attr_reader :port, :em_server_thread
 
     def log_message
       message = LogMessage.new()

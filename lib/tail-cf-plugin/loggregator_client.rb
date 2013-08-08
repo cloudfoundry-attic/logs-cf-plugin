@@ -4,11 +4,13 @@ require 'eventmachine'
 
 module TailCfPlugin
   class LoggregatorClient
-    def initialize(output)
+    def initialize(loggregator_host, user_token, output)
       @output = output
+      @loggregator_host = loggregator_host
+      @user_token = user_token
     end
 
-    def listen(loggregator_host, space_id, app_id, user_token)
+    def listen(space_id, app_id)
       websocket_address = "wss://#{loggregator_host}:4443/tail/spaces/#{space_id}"
       websocket_address += "/apps/#{app_id}" if app_id
 
@@ -40,12 +42,24 @@ module TailCfPlugin
       }
     end
 
+    def dump(space_id, app_id)
+      uri = URI.parse("http://#{loggregator_host}/dump/spaces/#{space_id}/apps/#{app_id}")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+      request = Net::HTTP::Get.new(uri.request_uri)
+
+      response = http.request(request)
+      response.body
+    end
+
     private
 
     def keep_alive_interval
       25
     end
 
-    attr_reader :output
+    attr_reader :output, :loggregator_host, :user_token
   end
 end
