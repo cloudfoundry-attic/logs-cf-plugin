@@ -1,6 +1,7 @@
 require 'log_message/log_message.pb'
 require 'faye/websocket'
 require 'eventmachine'
+require 'uri'
 
 module TailCfPlugin
   class LoggregatorClient
@@ -10,12 +11,8 @@ module TailCfPlugin
       @user_token = user_token
     end
 
-    def listen(space_id, app_id)
-      params = []
-      params << "space=#{space_id}"
-      params << "app=#{app_id}" if app_id
-
-      websocket_address = "wss://#{loggregator_host}:4443/tail/?#{params.join("&")}"
+    def listen(query_params)
+      websocket_address = "wss://#{loggregator_host}:4443/tail/?#{hash_to_query(query_params)}"
 
       EM.run {
         ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => "http://localhost", "Authorization" => user_token})
@@ -45,8 +42,8 @@ module TailCfPlugin
       }
     end
 
-    def dump(space_id, app_id)
-      uri = URI.parse("http://#{loggregator_host}/dump/?space=#{space_id}&app=#{app_id}")
+    def dump(query_params)
+      uri = URI.parse("http://#{loggregator_host}/dump/?#{hash_to_query(query_params)}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -61,6 +58,10 @@ module TailCfPlugin
 
     def keep_alive_interval
       25
+    end
+
+    def hash_to_query(hash)
+      return URI.encode(hash.map{|k,v| "#{k}=#{v}"}.join("&"))
     end
 
     attr_reader :output, :loggregator_host, :user_token

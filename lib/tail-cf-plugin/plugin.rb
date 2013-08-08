@@ -2,6 +2,7 @@ require 'cf'
 
 module TailCfPlugin
   require 'tail-cf-plugin/loggregator_client'
+  require 'tail-cf-plugin/log_target'
 
   class Plugin < CF::CLI
     include LoginRequirements
@@ -10,22 +11,30 @@ module TailCfPlugin
     group :apps
     input :app, :desc => "App to tail logs from", :argument => :optional, :from_given => by_name(:app)
     input :space, :type => :boolean, :desc => "Logs of all apps in the current space", :default => false
+    input :org, :type => :boolean, :desc => "Logs of all apps and spaces in the current organization", :default => false
     input :recent, :type => :boolean, :desc => "Dump recent logs instead of tailing", :default => false
 
     def logs
-      unless input[:space] || input[:app]
+      guids = [client.current_organization.guid, client.current_space.guid, input[:app].try(:guid)]
+
+      log_target = LogTarget.new(input[:org], input[:space], guids)
+
+      if log_target.ambiguous?
         Mothership::Help.command_help(@@commands[:logs])
-        fail "Please provide an application to log or call with --space"
+        fail "Please provide either --space or --org, but not both."
+      end
+
+      unless log_target.valid?
+        Mothership::Help.command_help(@@commands[:logs])
+        fail "Please provide an application to log."
       end
 
       loggregator_client = LoggregatorClient.new(loggregator_host, STDOUT, client.token.auth_header)
 
-      app_guid = !input[:space] ? input[:app].guid : nil
-
       if input[:recent]
-        loggregator_client.dump(client.current_space.guid, app_guid)
+        loggregator_client.dump(log_target.query_params)
       else
-        loggregator_client.listen(client.current_space.guid, app_guid)
+        loggregator_client.listen(log_target.query_params)
       end
     end
 

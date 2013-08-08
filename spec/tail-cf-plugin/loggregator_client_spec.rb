@@ -18,14 +18,14 @@ describe TailCfPlugin::LoggregatorClient do
       fake_output.string
     end
 
-    subject(:loggregator_client) { described_class.new("localhost", "auth_token", fake_output) }
+    let(:loggregator_client) { described_class.new("localhost", "auth_token", fake_output) }
 
     it "outputs data from the server" do
       fake_server = TailCfPlugin::FakeLoggregator.new(4443)
       fake_server.startListenEndpoint
 
       client_thread = Thread.new do
-        loggregator_client.listen("space_id", "app_id")
+        loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
       end
 
       expect(server_response).to eq("Connected to server.\n1234 5678 STDOUT Hello\n")
@@ -41,20 +41,15 @@ describe TailCfPlugin::LoggregatorClient do
         EM.stub(:run).and_yield
       end
 
-      it "constructs a query url with space_id and app_id" do
-        Faye::WebSocket::Client.should_receive(:new).with("wss://localhost:4443/tail/?space=space_id&app=app_id", nil, anything).and_return(mock_ws_server)
-        loggregator_client.listen('space_id', 'app_id')
-      end
-
-      it "constructs a query url with space_id" do
-        Faye::WebSocket::Client.should_receive(:new).with("wss://localhost:4443/tail/?space=space_id", nil, anything).and_return(mock_ws_server)
-        loggregator_client.listen('space_id', nil)
+      it "constructs a query url using the given params hash" do
+        Faye::WebSocket::Client.should_receive(:new).with("wss://localhost:4443/tail/?some=query_params&other=value", nil, anything).and_return(mock_ws_server)
+        loggregator_client.listen(some: 'query_params', other: 'value')
       end
 
       it "sends the authorization token as a header" do
         headers = {"Origin" => "http://localhost", "Authorization" => "auth_token"}
         Faye::WebSocket::Client.should_receive(:new).with(anything, nil, :headers => headers).and_return(mock_ws_server)
-        loggregator_client.listen('space_id', 'app_id')
+        loggregator_client.listen({})
       end
     end
 
@@ -65,7 +60,7 @@ describe TailCfPlugin::LoggregatorClient do
       fake_server.startListenEndpoint
 
       client_thread = Thread.new do
-        loggregator_client.listen("space_id", "app_id")
+        loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
       end
 
       sleep 2.5
@@ -84,7 +79,7 @@ describe TailCfPlugin::LoggregatorClient do
       fake_server = TailCfPlugin::FakeLoggregator.new(8000)
       fake_server.startDumpEndpoint
 
-      output = loggregator_client.dump("space_id", "app_id")
+      output = loggregator_client.dump({org: "org_id", space: "space_id", app: "app_id"})
 
       expect(output).to eq "6bd8483a-7f7f-4e11-800a-4369501752c3  STDOUT Hello on STDOUT"
       fake_server.stop

@@ -29,7 +29,7 @@ module TailCfPlugin
     def startDumpEndpoint
       app = lambda do |env|
         request = Rack::Request.new(env)
-        if request.request_method == "GET" && request.path == "/dump/" && request.params == {"space"=>"space_id", "app"=>"app_id"}
+        if request.request_method == "GET" && request.path == "/dump/" && request.params == {"org"=>"org_id", "space"=>"space_id", "app"=>"app_id"}
           response = Rack::Response.new(["6bd8483a-7f7f-4e11-800a-4369501752c3  STDOUT Hello on STDOUT"], 200, {})
           response.finish
         else
