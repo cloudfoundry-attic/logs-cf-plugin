@@ -3,18 +3,27 @@ require 'tail-cf-plugin/plugin'
 describe TailCfPlugin::LoggregatorClient do
   let(:plugin) { TailCfPlugin::Plugin.new }
 
-  it "should new up a loggregator client correctly" do
+  def stub_plugin_client_to_prevent_test_failure_on_travis
+    #even if not directly used in the tests below, client needs to be stubbed for all tests!
+    #If removed, locally these tests might still pass, if ~/.cf is present. It will, however, fail on travis
+
     client_double = double("client",
-               token: double("token", {auth_header: "auth_header"}),
-               current_space: double("space", guid: 'space_id'),
-               current_organization: double("org", guid: 'org_id'),
-        )
+                           token: double("token", {auth_header: "auth_header"}),
+                           current_space: double("space", guid: 'space_id'),
+                           current_organization: double("org", guid: 'org_id'),
+    )
 
     plugin.input = {}
     #yep. stubbing the object under test. better way to test this appreciated!
     TailCfPlugin::Plugin.any_instance.stub(:client).and_return(client_double)
     TailCfPlugin::Plugin.any_instance.stub(:loggregator_host).and_return("stubbed host")
+  end
 
+  before do
+    stub_plugin_client_to_prevent_test_failure_on_travis
+  end
+
+  it "should new up a loggregator client correctly" do
     mock_log_target = double("logtarget", :valid? => true, :ambiguous? => false, :query_params => {})
     TailCfPlugin::LogTarget.stub(:new).and_return(mock_log_target)
 
@@ -24,61 +33,62 @@ describe TailCfPlugin::LoggregatorClient do
     plugin.logs
   end
 
-  it "shows the help and fails if neither app nor space are given" do
-    plugin.input = {
-        app: nil,
-        space: false,
-        org: false,
-        recent: false
-    }
+  describe "failure cases" do
+    before do
+      TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:listen)
+      TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:dump)
+    end
 
-    TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:listen)
-    TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:dump)
-    Mothership::Help.should_receive(:command_help)
-    expect {
-      plugin.logs
-    }.to raise_exception
-  end
+    it "shows the help and fails if neither app nor space are given" do
+      plugin.input = {
+          app: nil,
+          space: false,
+          org: false,
+          recent: false
+      }
 
-  it "shows the help and fails if the space/org selection is ambiguous" do
-    plugin.input = {
-        app: nil,
-        space: true,
-        org: true,
-        recent: false
-    }
+      Mothership::Help.should_receive(:command_help)
+      expect {
+        plugin.logs
+      }.to raise_exception
+    end
 
-    TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:listen)
-    TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:dump)
-    Mothership::Help.should_receive(:command_help)
-    expect {
-      plugin.logs
-    }.to raise_exception
-  end
+    it "shows the help and fails if the space/org selection is ambiguous" do
+      plugin.input = {
+          app: nil,
+          space: true,
+          org: true,
+          recent: false
+      }
 
-  describe "when you are tailing a log" do
-    it "calls the loggregator_client the query_params hash from the log_target" do
-      plugin.input = {}
-
-      TailCfPlugin::LogTarget.any_instance.stub(:valid?).and_return(true)
-      TailCfPlugin::LogTarget.any_instance.stub(:ambiguous?).and_return(false)
-      TailCfPlugin::LogTarget.any_instance.stub(:query_params).and_return({some: "hash"})
-
-      TailCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).with({some: "hash"})
-      plugin.logs
+      Mothership::Help.should_receive(:command_help)
+      expect {
+        plugin.logs
+      }.to raise_exception
     end
   end
 
-  describe "when you are dumping a log" do
-    it "calls the loggregator_client the query_params hash from the log_target" do
-      plugin.input = {recent: true}
-
+  describe "success cases" do
+    before do
       TailCfPlugin::LogTarget.any_instance.stub(:valid?).and_return(true)
       TailCfPlugin::LogTarget.any_instance.stub(:ambiguous?).and_return(false)
       TailCfPlugin::LogTarget.any_instance.stub(:query_params).and_return({some: "hash"})
+    end
 
-      TailCfPlugin::LoggregatorClient.any_instance.should_receive(:dump).with({some: "hash"})
-      plugin.logs
+    describe "when you are tailing a log" do
+      it "calls the loggregator_client the query_params hash from the log_target" do
+        plugin.input = {}
+        TailCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).with({some: "hash"})
+        plugin.logs
+      end
+    end
+
+    describe "when you are dumping a log" do
+      it "calls the loggregator_client the query_params hash from the log_target" do
+        plugin.input = {recent: true}
+        TailCfPlugin::LoggregatorClient.any_instance.should_receive(:dump).with({some: "hash"})
+        plugin.logs
+      end
     end
   end
 end

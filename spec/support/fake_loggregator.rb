@@ -2,43 +2,15 @@ module TailCfPlugin
   class FakeLoggregator
     attr_reader :messages
 
-    def initialize(port)
-      @port = port
+    def initialize(ws_port, dump_port)
+      @ws_port = ws_port
+      @dump_port = dump_port
       @messages = []
     end
 
-    def startListenEndpoint
-      app = lambda do |env|
-        ws = Faye::WebSocket.new(env)
-
-        ws.on :open do |event|
-          ws.send(log_message)
-        end
-
-        ws.on :message do |event|
-          @messages << event.data
-        end
-
-        # Return async Rack response
-        ws.rack_response
-      end
-
-      runApp(app, port)
-    end
-
-    def startDumpEndpoint
-      app = lambda do |env|
-        request = Rack::Request.new(env)
-        if request.request_method == "GET" && request.path == "/dump/" && request.params == {"org"=>"org_id", "space"=>"space_id", "app"=>"app_id"}
-          response = Rack::Response.new(["6bd8483a-7f7f-4e11-800a-4369501752c3  STDOUT Hello on STDOUT"], 200, {})
-          response.finish
-        else
-          response = Rack::Response.new(["Not found"], 404, {})
-          response.finish
-        end
-      end
-
-      runApp(app, port)
+    def start
+      runApp(websocket_app, ws_port)
+      runApp(dump_app, dump_port)
     end
 
     def stop
@@ -47,7 +19,7 @@ module TailCfPlugin
 
     private
 
-    attr_reader :port, :em_server_thread
+    attr_reader :ws_port, :dump_port, :em_server_thread
 
     def runApp(app, port)
       Faye::WebSocket.load_adapter('thin')
@@ -87,6 +59,36 @@ module TailCfPlugin
       message.source_type = LogMessage::SourceType::DEA
       result = message.encode.buf
       result.unpack("C*")
+    end
+
+    def websocket_app
+      lambda do |env|
+        ws = Faye::WebSocket.new(env)
+
+        ws.on :open do |event|
+          ws.send(log_message)
+        end
+
+        ws.on :message do |event|
+          @messages << event.data
+        end
+
+        # Return async Rack response
+        ws.rack_response
+      end
+    end
+
+    def dump_app
+      lambda do |env|
+        request = Rack::Request.new(env)
+        if request.request_method == "GET" && request.path == "/dump/" && request.params == {"org"=>"org_id", "space"=>"space_id", "app"=>"app_id"}
+          response = Rack::Response.new(["6bd8483a-7f7f-4e11-800a-4369501752c3  STDOUT Hello on STDOUT"], 200, {})
+          response.finish
+        else
+          response = Rack::Response.new(["Not found"], 404, {})
+          response.finish
+        end
+      end
     end
   end
 end

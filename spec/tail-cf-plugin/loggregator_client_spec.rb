@@ -6,6 +6,15 @@ describe TailCfPlugin::LoggregatorClient do
 
   let(:fake_output) { StringIO.new }
 
+  before(:all) do
+    @fake_server = TailCfPlugin::FakeLoggregator.new(4443, 8000)
+    @fake_server.start
+  end
+
+  after(:all) do
+    @fake_server.stop
+  end
+
   describe "listening to logs" do
     def server_response
       tries = 0
@@ -21,9 +30,6 @@ describe TailCfPlugin::LoggregatorClient do
     let(:loggregator_client) { described_class.new("localhost", "auth_token", fake_output) }
 
     it "outputs data from the server" do
-      fake_server = TailCfPlugin::FakeLoggregator.new(4443)
-      fake_server.startListenEndpoint
-
       client_thread = Thread.new do
         loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
       end
@@ -31,7 +37,6 @@ describe TailCfPlugin::LoggregatorClient do
       expect(server_response).to eq("Connected to server.\n1234 5678 STDOUT Hello\n")
 
       Thread.kill(client_thread)
-      fake_server.stop
     end
 
     describe "the websocket request" do
@@ -56,19 +61,15 @@ describe TailCfPlugin::LoggregatorClient do
     it "sends a keep alive every configured interval" do
       TailCfPlugin::LoggregatorClient.any_instance.stub(:keep_alive_interval).and_return(1)
 
-      fake_server = TailCfPlugin::FakeLoggregator.new(4443)
-      fake_server.startListenEndpoint
-
       client_thread = Thread.new do
         loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
       end
 
       sleep 2.5
 
-      expect(fake_server.messages).to eq([[42], [42]])
+      expect(@fake_server.messages).to eq([[42], [42]])
 
       Thread.kill(client_thread)
-      fake_server.stop
     end
   end
 
@@ -76,13 +77,10 @@ describe TailCfPlugin::LoggregatorClient do
     subject(:loggregator_client) { described_class.new("localhost:8000", "auth_token", fake_output) }
 
     it "outputs the logs from the server" do
-      fake_server = TailCfPlugin::FakeLoggregator.new(8000)
-      fake_server.startDumpEndpoint
 
       output = loggregator_client.dump({org: "org_id", space: "space_id", app: "app_id"})
 
       expect(output).to eq "6bd8483a-7f7f-4e11-800a-4369501752c3  STDOUT Hello on STDOUT"
-      fake_server.stop
     end
   end
 end
