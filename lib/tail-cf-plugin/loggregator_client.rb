@@ -43,7 +43,7 @@ module TailCfPlugin
     end
 
     def dump_messages(query_params)
-      uri = URI.parse("http://#{loggregator_host}/dump/?#{hash_to_query(query_params)}")
+      uri = URI.parse("https://#{loggregator_host}/dump/?#{hash_to_query(query_params)}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
