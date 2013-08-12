@@ -7,10 +7,10 @@ describe LogsCfPlugin::LoggregatorClient do
     #even if not directly used in the tests below, client needs to be stubbed for all tests!
     #If removed, locally these tests might still pass, if ~/.cf is present. It will, however, fail on travis
 
-    client_double = double("client",
-                           token: double("token", {auth_header: "auth_header"}),
-                           current_space: double("space", guid: 'space_id'),
-                           current_organization: double("org", guid: 'org_id'),
+    client_double = double('client',
+                           token: double('token', {auth_header: 'auth_header'}),
+                           current_space: double('space', guid: 'space_id'),
+                           current_organization: double('org', guid: 'org_id', name: 'org'),
     )
 
     plugin.input = { trace: false}

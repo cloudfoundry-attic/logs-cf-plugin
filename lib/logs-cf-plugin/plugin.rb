@@ -16,6 +16,7 @@ module LogsCfPlugin
     input :recent, :type => :boolean, :desc => "Dump recent logs instead of tailing", :default => false
 
     def logs
+      client.current_organization.name # resolve org name so CC will validate AuthToken
       guids = [client.current_organization.guid, client.current_space.guid, input[:app].try(:guid)]
 
       log_target = LogTarget.new(input[:org], input[:space], guids)
