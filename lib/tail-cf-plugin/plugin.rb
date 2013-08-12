@@ -3,6 +3,7 @@ require 'cf'
 module TailCfPlugin
   require 'tail-cf-plugin/loggregator_client'
   require 'tail-cf-plugin/log_target'
+  require 'tail-cf-plugin/message_writer'
 
   class Plugin < CF::CLI
     include LoginRequirements
@@ -32,7 +33,10 @@ module TailCfPlugin
       loggregator_client = LoggregatorClient.new(loggregator_host, client.token.auth_header, STDOUT)
 
       if input[:recent]
-        loggregator_client.dump(log_target.query_params)
+        loggregator_client.dump_messages(log_target.query_params).each do |m|
+          MessageWriter.write(STDOUT, m)
+        end
+
       else
         loggregator_client.listen(log_target.query_params)
       end

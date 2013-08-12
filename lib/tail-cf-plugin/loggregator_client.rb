@@ -26,7 +26,7 @@ module TailCfPlugin
 
         ws.on :message do |event|
           received_message = LogMessage.decode(event.data.pack("C*"))
-          output.puts([received_message.app_id, received_message.source_id, received_message.message_type_name, received_message.message].join(" "))
+          MessageWriter.write(output, received_message)
         end
 
         ws.on :error do |event|
@@ -42,16 +42,28 @@ module TailCfPlugin
       }
     end
 
-    def dump(query_params)
+    def dump_messages(query_params)
       uri = URI.parse("http://#{loggregator_host}/dump/?#{hash_to_query(query_params)}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
       request = Net::HTTP::Get.new(uri.request_uri)
+      request['Authorization'] = user_token
 
       response = http.request(request)
-      response.body
+
+      return [] unless response.code == "200"
+
+      response_bytes = StringIO.new(response.body)
+      messages = []
+      while len = response_bytes.read(4)
+        len = len.unpack("N")[0] # 32-bit length, BigEndian stylie
+        record = response_bytes.read(len) # This returns a string even if len is 0.
+        msg = LogMessage.decode(record)
+        messages << msg
+      end
+      messages
     end
 
     private

@@ -74,13 +74,21 @@ describe TailCfPlugin::LoggregatorClient do
   end
 
   describe "dumping logs" do
-    subject(:loggregator_client) { described_class.new("localhost:8000", "auth_token", fake_output) }
+    it "returns the messages from the server" do
+      loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output)
+      output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
 
-    it "outputs the logs from the server" do
+      expect(output.length).to eq 2
 
-      output = loggregator_client.dump({org: "org_id", space: "space_id", app: "app_id"})
+      expect(output[0].message).to eq "Some data"
+      expect(output[1].message).to eq "More stuff"
+    end
 
-      expect(output).to eq "6bd8483a-7f7f-4e11-800a-4369501752c3  STDOUT Hello on STDOUT"
+    it "returns an empty array when the auth code is invalid" do
+      loggregator_client = described_class.new("localhost:8000", "bad_auth_token", fake_output)
+      output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
+
+      expect(output.length).to eq 0
     end
   end
 end

@@ -81,13 +81,16 @@ module TailCfPlugin
     def dump_app
       lambda do |env|
         request = Rack::Request.new(env)
-        if request.request_method == "GET" && request.path == "/dump/" && request.params == {"org"=>"org_id", "space"=>"space_id", "app"=>"app_id"}
-          response = Rack::Response.new(["6bd8483a-7f7f-4e11-800a-4369501752c3  STDOUT Hello on STDOUT"], 200, {})
-          response.finish
-        else
-          response = Rack::Response.new(["Not found"], 404, {})
-          response.finish
-        end
+
+        response = if env['HTTP_AUTHORIZATION'] != "auth_token"
+                     Rack::Response.new(["Unauthorized"], 401, {})
+
+                   elsif request.request_method == "GET" && request.path == "/dump/" && request.params == {"org" => "org_id", "space" => "space_id", "app" => "app_id"}
+                     Rack::Response.new(["\x00\x00\x000\n\tSome data\x10\x01\x18\xF2\xC1\xE2\xE6\x93\xF5\xD9\x99&\"\x05myApp(\x04:\amySpaceB\x05myOrg\x00\x00\x001\n\nMore stuff\x10\x01\x18\xB4\x96\xEA\xE6\x93\xF5\xD9\x99&\"\x05myApp(\x04:\amySpaceB\x05myOrg"], 200, {})
+                   else
+                     Rack::Response.new(["Not found"], 404, {})
+                   end
+        response.finish
       end
     end
   end

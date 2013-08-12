@@ -36,7 +36,7 @@ describe TailCfPlugin::LoggregatorClient do
   describe "failure cases" do
     before do
       TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:listen)
-      TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:dump)
+      TailCfPlugin::LoggregatorClient.any_instance.should_not_receive(:dump_messages)
     end
 
     it "shows the help and fails if neither app nor space are given" do
@@ -86,7 +86,7 @@ describe TailCfPlugin::LoggregatorClient do
     describe "when you are dumping a log" do
       it "calls the loggregator_client the query_params hash from the log_target" do
         plugin.input = {recent: true}
-        TailCfPlugin::LoggregatorClient.any_instance.should_receive(:dump).with({some: "hash"})
+        TailCfPlugin::LoggregatorClient.any_instance.should_receive(:dump_messages).with({some: "hash"}).and_return([])
         plugin.logs
       end
     end
