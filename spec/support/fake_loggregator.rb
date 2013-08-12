@@ -1,4 +1,4 @@
-module TailCfPlugin
+module LogsCfPlugin
   class FakeLoggregator
     attr_reader :messages
 

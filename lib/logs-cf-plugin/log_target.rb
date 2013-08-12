@@ -1,4 +1,4 @@
-module TailCfPlugin
+module LogsCfPlugin
   class LogTarget
     def initialize(target_organization, target_space, ids)
       raise ArgumentError, "Requires 3 ids" unless ids.size == 3

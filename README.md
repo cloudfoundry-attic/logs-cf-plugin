@@ -1,4 +1,4 @@
-# Tail-Cf-Plugin [![Build Status](https://travis-ci.org/cloudfoundry/tail-cf-plugin.png?branch=master)](https://travis-ci.org/cloudfoundry/tail-cf-plugin)
+# Logs-Cf-Plugin [![Build Status](https://travis-ci.org/cloudfoundry/logs-cf-plugin.png?branch=master)](https://travis-ci.org/cloudfoundry/logs-cf-plugin)
 
 Plugin to cf command to add streaming application logs.
 
@@ -6,7 +6,7 @@ Plugin to cf command to add streaming application logs.
 
 Add this line to your application's Gemfile:
 
-    gem 'tail-cf-plugin'
+    gem 'logs-cf-plugin'
 
 And then execute:
 
@@ -14,11 +14,11 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install tail-cf-plugin
+    $ gem install logs-cf-plugin
 
 ## Usage
 
-After installing you can run cf tail and see your application's logs stream to the console.
+After installing you can run cf logs and see your application's logs stream to the console.
 
 ## Contributing
 
@@ -39,8 +39,8 @@ Once your commits are approved by Travis CI and reviewed by the core team, they 
 
 #### Checkout
 
-    git clone git@github.com:cloudfoundry/tail-cf-plugin.git
-    cd tail-cf-plugin/
+    git clone git@github.com:cloudfoundry/logs-cf-plugin.git
+    cd logs-cf-plugin/
     bundle
 
 #### Running tests

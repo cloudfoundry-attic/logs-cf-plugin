@@ -1,9 +1,9 @@
 require 'cf'
 
-module TailCfPlugin
-  require 'tail-cf-plugin/loggregator_client'
-  require 'tail-cf-plugin/log_target'
-  require 'tail-cf-plugin/message_writer'
+module LogsCfPlugin
+  require 'logs-cf-plugin/loggregator_client'
+  require 'logs-cf-plugin/log_target'
+  require 'logs-cf-plugin/message_writer'
 
   class Plugin < CF::CLI
     include LoginRequirements

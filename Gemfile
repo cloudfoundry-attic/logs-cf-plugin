@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in tail-cf-plugin.gemspec
+# Specify your gem's dependencies in logs-cf-plugin.gemspec
 gemspec
 
 # These are here because Travis bundles without development

@@ -1,13 +1,13 @@
 require 'support/fake_loggregator'
-require 'tail-cf-plugin/plugin'
+require 'logs-cf-plugin/plugin'
 require 'thin'
 
-describe TailCfPlugin::LoggregatorClient do
+describe LogsCfPlugin::LoggregatorClient do
 
   let(:fake_output) { StringIO.new }
 
   before(:all) do
-    @fake_server = TailCfPlugin::FakeLoggregator.new(4443, 8000)
+    @fake_server = LogsCfPlugin::FakeLoggregator.new(4443, 8000)
     @fake_server.start
   end
 
@@ -73,7 +73,7 @@ describe TailCfPlugin::LoggregatorClient do
     end
 
     it "sends a keep alive every configured interval" do
-      TailCfPlugin::LoggregatorClient.any_instance.stub(:keep_alive_interval).and_return(1)
+      LogsCfPlugin::LoggregatorClient.any_instance.stub(:keep_alive_interval).and_return(1)
 
       client_thread = Thread.new do
         loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})

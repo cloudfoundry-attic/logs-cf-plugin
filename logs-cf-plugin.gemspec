@@ -1,14 +1,14 @@
 # coding: utf-8
 
 Gem::Specification.new do |spec|
-  spec.name          = "tail-cf-plugin"
-  spec.version       = '0.0.22.pre'
+  spec.name          = "logs-cf-plugin"
+  spec.version       = '0.0.23.pre'
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ["Pivotal"]
   spec.email         = ["vcap-dev@googlegroups.com"]
-  spec.description   = "CF command line tool to tail CF Application Logs"
-  spec.summary       = "CF Tail"
-  spec.homepage      = "http://github.com/cloudfoundry/tail-cf-plugin"
+  spec.description   = "CF command line tool to retrieve recent and tail CF Application Logs"
+  spec.summary       = "CF Logs"
+  spec.homepage      = "http://github.com/cloudfoundry/logs-cf-plugin"
   spec.license       = "Apache 2.0"
 
   spec.files         = `git ls-files -- lib/* vendor/*`.split("\n") + %w(README.md)

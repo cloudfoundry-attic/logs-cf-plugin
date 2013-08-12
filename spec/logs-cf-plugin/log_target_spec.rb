@@ -1,6 +1,6 @@
-require "tail-cf-plugin/log_target"
+require "logs-cf-plugin/log_target"
 
-describe TailCfPlugin::LogTarget do
+describe LogsCfPlugin::LogTarget do
 
   it "raises error if not passed in a 3 ids" do
     expect { described_class.new(true, true, [1]) }.to raise_error /Requires 3 ids/

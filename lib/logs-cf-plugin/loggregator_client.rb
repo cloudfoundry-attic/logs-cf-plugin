@@ -3,7 +3,7 @@ require 'faye/websocket'
 require 'eventmachine'
 require 'uri'
 
-module TailCfPlugin
+module LogsCfPlugin
   class LoggregatorClient
     include CFoundry::TraceHelpers
 
