@@ -30,7 +30,7 @@ module TailCfPlugin
         fail "Please provide an application to log."
       end
 
-      loggregator_client = LoggregatorClient.new(loggregator_host, client.token.auth_header, STDOUT)
+      loggregator_client = LoggregatorClient.new(loggregator_host, client.token.auth_header, STDOUT, input[:trace])
 
       if input[:recent]
         loggregator_client.dump_messages(log_target.query_params).each do |m|

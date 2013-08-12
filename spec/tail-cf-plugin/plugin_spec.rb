@@ -13,7 +13,7 @@ describe TailCfPlugin::LoggregatorClient do
                            current_organization: double("org", guid: 'org_id'),
     )
 
-    plugin.input = {}
+    plugin.input = { trace: false}
     #yep. stubbing the object under test. better way to test this appreciated!
     TailCfPlugin::Plugin.any_instance.stub(:client).and_return(client_double)
     TailCfPlugin::Plugin.any_instance.stub(:loggregator_host).and_return("stubbed host")
@@ -28,7 +28,7 @@ describe TailCfPlugin::LoggregatorClient do
     TailCfPlugin::LogTarget.stub(:new).and_return(mock_log_target)
 
     mock_loggreator_client = double().as_null_object
-    TailCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT).and_return(mock_loggreator_client)
+    TailCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false).and_return(mock_loggreator_client)
 
     plugin.logs
   end
