@@ -27,16 +27,30 @@ describe TailCfPlugin::LoggregatorClient do
       fake_output.string
     end
 
-    let(:loggregator_client) { described_class.new("localhost", "auth_token", fake_output, true) }
+    let(:loggregator_client) { described_class.new("localhost", "auth_token", fake_output, false) }
 
     it "outputs data from the server" do
       client_thread = Thread.new do
         loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
       end
 
-      expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?org=org_id&space=space_id&app=app_id\nConnected to server.\n1234 5678 STDOUT Hello\n")
+      expect(server_response).to eq("Connected to server.\n1234 5678 STDOUT Hello\n")
 
       Thread.kill(client_thread)
+    end
+
+    describe "with tracing" do
+      let(:loggregator_client) { described_class.new("localhost", "auth_token", fake_output, true) }
+
+      it "outputs data from the server" do
+        client_thread = Thread.new do
+          loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
+        end
+
+        expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?org=org_id&space=space_id&app=app_id\nConnected to server.\n1234 5678 STDOUT Hello\n")
+
+        Thread.kill(client_thread)
+      end
     end
 
     describe "the websocket request" do
@@ -74,7 +88,9 @@ describe TailCfPlugin::LoggregatorClient do
   end
 
   describe "dumping logs" do
-    subject(:loggregator_client) { described_class.new("localhost:8000", "auth_token", fake_output, true) }
+    it "returns the messages from the server" do
+      loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
+      output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
 
       expect(output.length).to eq 2
 
@@ -83,10 +99,26 @@ describe TailCfPlugin::LoggregatorClient do
     end
 
     it "returns an empty array when the auth code is invalid" do
-      loggregator_client = described_class.new("localhost:8000", "bad_auth_token", fake_output)
+      loggregator_client = described_class.new("localhost:8000", "bad_auth_token", fake_output, false)
       output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
 
       expect(output.length).to eq 0
+    end
+
+    describe "with tracing" do
+
+      let(:loggregator_client) { described_class.new("localhost:8000", "auth_token", fake_output, true) }
+
+      it "returns the messages from the server" do
+
+        output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
+
+        expect(output.length).to eq 2
+
+        expect(fake_output.string).to include "REQUEST: GET /dump/?org=org_id&space=space_id&app=app_id"
+        expect(fake_output.string).to include "RESPONSE: [200]"
+        expect(fake_output.string).to include "RESPONSE_BODY:"
+      end
     end
   end
 end

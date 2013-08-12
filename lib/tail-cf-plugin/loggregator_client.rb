@@ -63,7 +63,7 @@ module TailCfPlugin
             :headers => sane_headers(request),
             :body => ""
         }
-        request_trace(request_hash)
+        output.puts(request_trace(request_hash))
       end
 
       response = http.request(request)
@@ -85,7 +85,7 @@ module TailCfPlugin
             :status => response.code,
             :body => messages
         }
-        response_trace(response_hash)
+        output.puts(response_trace(response_hash))
       end
 
       messages
