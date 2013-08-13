@@ -86,16 +86,25 @@ describe LogsCfPlugin::LoggregatorClient do
       Thread.kill(client_thread)
     end
 
-    it "encourages user to upgrade" do
-      client_thread = Thread.new do
-        loggregator_client.listen({org: "org_id", space: "space_id", app: "bad_app_id"})
+    describe "upgrade info" do
+      after do
+        @fake_server.stop
+
+        @fake_server = LogsCfPlugin::FakeLoggregator.new(4443, 8000)
+        @fake_server.start
       end
 
-      sleep 2.5
+      it "encourages user to upgrade" do
+        client_thread = Thread.new do
+          loggregator_client.listen({org: "org_id", space: "space_id", app: "bad_app_id"})
+        end
 
-      expect(fake_output.string).to include("Error parsing data. Please ensure your gem is the latest version.")
+        sleep 2.5
 
-      Thread.kill(client_thread)
+        expect(fake_output.string).to include("Error parsing data. Please ensure your gem is the latest version.")
+
+        Thread.kill(client_thread)
+      end
     end
   end
 
@@ -139,7 +148,7 @@ describe LogsCfPlugin::LoggregatorClient do
       sleep 2.5
 
       expect(fake_output.string).to include("Error parsing data. Please ensure your gem is the latest version.")
-      expect(output).to eq nil
+      expect(output).to eq []
 
     end
 

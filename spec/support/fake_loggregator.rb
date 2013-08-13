@@ -62,7 +62,7 @@ module LogsCfPlugin
     end
 
     def corrupt_log_message
-      [42]
+      [7]
     end
 
     def websocket_app

@@ -34,6 +34,8 @@ module LogsCfPlugin
             MessageWriter.write(output, received_message)
           rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError,  Beefcake::Message::InvalidValueError
             output.puts("Error parsing data. Please ensure your gem is the latest version.")
+            ws.close
+            EM.stop
           end
         end
 
@@ -44,7 +46,7 @@ module LogsCfPlugin
 
         ws.on :close do |event|
           ws.close
-          output.puts("Server dropped connection...goodbye.")
+          output.puts("Connection closed...goodbye.")
           EM.stop
           ws = nil
         end
@@ -95,6 +97,7 @@ module LogsCfPlugin
       messages
     rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError
       output.puts("Error parsing data. Please ensure your gem is the latest version.")
+      []
     end
 
     private
