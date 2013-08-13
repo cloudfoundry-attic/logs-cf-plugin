@@ -61,12 +61,20 @@ module LogsCfPlugin
       result.unpack("C*")
     end
 
+    def corrupt_log_message
+      [42]
+    end
+
     def websocket_app
       lambda do |env|
         ws = Faye::WebSocket.new(env)
 
         ws.on :open do |event|
-          ws.send(log_message)
+          if env['QUERY_STRING'] =~ /bad_app_id/
+            ws.send(corrupt_log_message)
+          else
+            ws.send(log_message)
+          end
         end
 
         ws.on :message do |event|
@@ -87,6 +95,8 @@ module LogsCfPlugin
 
                    elsif request.request_method == "GET" && request.path == "/dump/" && request.params == {"org" => "org_id", "space" => "space_id", "app" => "app_id"}
                      Rack::Response.new(["\x00\x00\x000\n\tSome data\x10\x01\x18\xF2\xC1\xE2\xE6\x93\xF5\xD9\x99&\"\x05myApp(\x04:\amySpaceB\x05myOrg\x00\x00\x001\n\nMore stuff\x10\x01\x18\xB4\x96\xEA\xE6\x93\xF5\xD9\x99&\"\x05myApp(\x04:\amySpaceB\x05myOrg"], 200, {})
+                   elsif request.request_method == "GET" && request.path == "/dump/" && request.params == {"org" => "org_id", "space" => "space_id", "app" => "bad_app_id"}
+                     Rack::Response.new(["\x00\x00\x001\n\t\x10"], 200, {})
                    else
                      Rack::Response.new(["Not found"], 404, {})
                    end

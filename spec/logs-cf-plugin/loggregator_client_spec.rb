@@ -85,6 +85,18 @@ describe LogsCfPlugin::LoggregatorClient do
 
       Thread.kill(client_thread)
     end
+
+    it "encourages user to upgrade" do
+      client_thread = Thread.new do
+        loggregator_client.listen({org: "org_id", space: "space_id", app: "bad_app_id"})
+      end
+
+      sleep 2.5
+
+      expect(fake_output.string).to include("Error parsing data. Please ensure your gem is the latest version.")
+
+      Thread.kill(client_thread)
+    end
   end
 
   describe "dumping logs" do
@@ -120,5 +132,16 @@ describe LogsCfPlugin::LoggregatorClient do
         expect(fake_output.string).to include "RESPONSE_BODY:"
       end
     end
+    it "encourages the user to upgrade" do
+      loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
+      output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "bad_app_id"})
+
+      sleep 2.5
+
+      expect(fake_output.string).to include("Error parsing data. Please ensure your gem is the latest version.")
+      expect(output).to eq nil
+
+    end
+
   end
 end

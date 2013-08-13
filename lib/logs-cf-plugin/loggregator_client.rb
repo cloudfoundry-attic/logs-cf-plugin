@@ -29,8 +29,12 @@ module LogsCfPlugin
         end
 
         ws.on :message do |event|
-          received_message = LogMessage.decode(event.data.pack("C*"))
-          MessageWriter.write(output, received_message)
+          begin
+            received_message = LogMessage.decode(event.data.pack("C*"))
+            MessageWriter.write(output, received_message)
+          rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError,  Beefcake::Message::InvalidValueError
+            output.puts("Error parsing data. Please ensure your gem is the latest version.")
+          end
         end
 
         ws.on :error do |event|
@@ -89,6 +93,8 @@ module LogsCfPlugin
       end
 
       messages
+    rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError
+      output.puts("Error parsing data. Please ensure your gem is the latest version.")
     end
 
     private
