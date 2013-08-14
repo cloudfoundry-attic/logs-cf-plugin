@@ -11,6 +11,10 @@ describe LogsCfPlugin::LoggregatorClient do
     @fake_server.start
   end
 
+  before(:each) do
+    @fake_server.close_code = nil
+  end
+
   after(:all) do
     @fake_server.stop
   end
@@ -105,6 +109,44 @@ describe LogsCfPlugin::LoggregatorClient do
 
         Thread.kill(client_thread)
       end
+    end
+
+    describe "websocket connection closed" do
+      it "outputs error when server returns 'no space given' code" do
+        client_thread = Thread.new do
+          loggregator_client.listen({org: "org_id", app: "app_id"})
+        end
+
+        EM.should_receive(:stop).once
+        expect(server_response).to match /Error: No space given\./
+
+        Thread.kill(client_thread)
+      end
+
+      it "outputs error when no auth token given" do
+        loggregator_client = described_class.new("localhost", "", fake_output, false)
+        client_thread = Thread.new do
+          loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
+        end
+
+        EM.should_receive(:stop).once
+        expect(server_response).to match /Error: No authorization token given\./
+
+        Thread.kill(client_thread)
+      end
+
+      it "outputs error when server returns 'unauthorized' code" do
+        loggregator_client = described_class.new("localhost", "I am unauthorized", fake_output, false)
+        client_thread = Thread.new do
+          loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
+        end
+
+        EM.should_receive(:stop).once
+        expect(server_response).to match /Error: Not authorized\./
+
+        Thread.kill(client_thread)
+      end
+
     end
   end
 

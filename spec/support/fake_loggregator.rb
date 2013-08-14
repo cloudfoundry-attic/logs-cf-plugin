@@ -1,6 +1,7 @@
 module LogsCfPlugin
   class FakeLoggregator
     attr_reader :messages
+    attr_accessor :close_code
 
     def initialize(ws_port, dump_port)
       @ws_port = ws_port
@@ -67,11 +68,19 @@ module LogsCfPlugin
 
     def websocket_app
       lambda do |env|
+        req = Rack::Request.new(env)
+
         ws = Faye::WebSocket.new(env)
 
         ws.on :open do |event|
           if env['QUERY_STRING'] =~ /bad_app_id/
             ws.send(corrupt_log_message)
+          elsif req.params["space"] == nil
+            ws.close nil, 4000
+          elsif env['HTTP_AUTHORIZATION'] == ""
+            ws.close nil, 4001
+          elsif env['HTTP_AUTHORIZATION'] == "I am unauthorized"
+            ws.close nil, 4002
           else
             ws.send(log_message)
           end

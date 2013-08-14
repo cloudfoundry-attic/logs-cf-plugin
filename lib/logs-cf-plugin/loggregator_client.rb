@@ -46,7 +46,15 @@ module LogsCfPlugin
 
         ws.on :close do |event|
           ws.close
-          output.puts("Connection closed...goodbye.")
+          case event.code
+            when 4000
+              output.puts("Error: No space given.")
+            when 4001
+              output.puts("Error: No authorization token given.")
+            when 4002
+              output.puts("Error: Not authorized.")
+          end
+          output.puts("Server dropped connection...goodbye.")
           EM.stop
           ws = nil
         end
