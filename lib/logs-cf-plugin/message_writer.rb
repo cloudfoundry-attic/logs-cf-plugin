@@ -1,5 +1,10 @@
+require "cf/cli"
+
 module MessageWriter
-  def self.write(output, message)
-    output.puts([message.app_id, message.source_id, message.message_type_name, message.message].join(" "))
+  include CF::Interactive
+  def write(output, message)
+    msg = [message.app_id, message.source_id, message.message_type_name, message.message].join(" ")
+    msg = c(msg, :error) if message.message_type == LogMessage::MessageType::ERR
+    output.puts(msg)
   end
 end

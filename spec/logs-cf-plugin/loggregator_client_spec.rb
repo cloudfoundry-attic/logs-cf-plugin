@@ -12,6 +12,7 @@ describe LogsCfPlugin::LoggregatorClient do
   end
 
   before(:each) do
+    $stdout.stub(tty?: true)
     @fake_server.close_code = nil
   end
 
@@ -33,12 +34,22 @@ describe LogsCfPlugin::LoggregatorClient do
 
     let(:loggregator_client) { described_class.new("localhost", "auth_token", fake_output, false) }
 
-    it "outputs data from the server" do
+    it "outputs data from the server's stdout without color" do
       client_thread = Thread.new do
         loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
       end
 
       expect(server_response).to eq("Connected to server.\n1234 5678 STDOUT Hello\n")
+
+      Thread.kill(client_thread)
+    end
+
+    it "outputs data from the server's stderr without color" do
+      client_thread = Thread.new do
+        loggregator_client.listen({org: "org_id", space: "space_id", app: "stderr"})
+      end
+
+      expect(server_response).to eq("Connected to server.\n\e[35m1234 5678 STDERR Hello\e[0m\n")
 
       Thread.kill(client_thread)
     end
@@ -151,21 +162,31 @@ describe LogsCfPlugin::LoggregatorClient do
   end
 
   describe "dumping logs" do
-    it "returns the messages from the server" do
+    it "outputs the messages from the server" do
       loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
-      output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
+      loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
 
-      expect(output.length).to eq 2
+      output = fake_output.string.split("\n")
 
-      expect(output[0].message).to eq "Some data"
-      expect(output[1].message).to eq "More stuff"
+      expect(output[0]).to eq "myApp  STDOUT Some data"
+      expect(output[1]).to eq "myApp  STDOUT More stuff"
     end
 
-    it "returns an empty array when the auth code is invalid" do
-      loggregator_client = described_class.new("localhost:8000", "bad_auth_token", fake_output, false)
-      output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
+    it "colors the stderr messages" do
+      loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
+      loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "stderr"})
 
-      expect(output.length).to eq 0
+      output = fake_output.string.split("\n")
+
+      expect(output[0]).to eq "\e[35mmyApp  STDERR Some data\e[0m"
+      expect(output[1]).to eq "\e[35mmyApp  STDERR More stuff\e[0m"
+    end
+
+    it "outputs nothing the auth code is invalid" do
+      loggregator_client = described_class.new("localhost:8000", "bad_auth_token", fake_output, false)
+      loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
+
+      expect(fake_output.string).to eq ""
     end
 
     describe "with tracing" do
@@ -173,10 +194,7 @@ describe LogsCfPlugin::LoggregatorClient do
       let(:loggregator_client) { described_class.new("localhost:8000", "auth_token", fake_output, true) }
 
       it "returns the messages from the server" do
-
-        output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
-
-        expect(output.length).to eq 2
+        loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
 
         expect(fake_output.string).to include "REQUEST: GET /dump/?org=org_id&space=space_id&app=app_id"
         expect(fake_output.string).to include "RESPONSE: [200]"
@@ -191,7 +209,6 @@ describe LogsCfPlugin::LoggregatorClient do
 
       expect(fake_output.string).to include("Error parsing data. Please ensure your gem is the latest version.")
       expect(output).to eq []
-
     end
 
   end

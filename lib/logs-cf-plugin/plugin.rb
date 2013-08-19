@@ -7,6 +7,7 @@ module LogsCfPlugin
 
   class Plugin < CF::CLI
     include LoginRequirements
+    include MessageWriter
 
     desc "Tail or dump logs for CF applications or spaces"
     group :apps
@@ -34,10 +35,7 @@ module LogsCfPlugin
       loggregator_client = LoggregatorClient.new(loggregator_host, client.token.auth_header, STDOUT, input[:trace])
 
       if input[:recent]
-        loggregator_client.dump_messages(log_target.query_params).each do |m|
-          MessageWriter.write(STDOUT, m)
-        end
-
+        loggregator_client.dump_messages(log_target.query_params)
       else
         loggregator_client.listen(log_target.query_params)
       end

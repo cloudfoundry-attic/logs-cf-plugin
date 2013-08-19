@@ -2,10 +2,12 @@ require 'log_message/log_message.pb'
 require 'faye/websocket'
 require 'eventmachine'
 require 'uri'
+require 'logs-cf-plugin/message_writer'
 
 module LogsCfPlugin
   class LoggregatorClient
     include CFoundry::TraceHelpers
+    include MessageWriter
 
     def initialize(loggregator_host, user_token, output, trace)
       @output = output
@@ -31,7 +33,7 @@ module LogsCfPlugin
         ws.on :message do |event|
           begin
             received_message = LogMessage.decode(event.data.pack("C*"))
-            MessageWriter.write(output, received_message)
+            write(output, received_message)
           rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError,  Beefcake::Message::InvalidValueError
             output.puts("Error parsing data. Please ensure your gem is the latest version.")
             ws.close
@@ -102,7 +104,9 @@ module LogsCfPlugin
         output.puts(response_trace(response_hash))
       end
 
-      messages
+      messages.each do |m|
+        write(output, m)
+      end
     rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError
       output.puts("Error parsing data. Please ensure your gem is the latest version.")
       []
