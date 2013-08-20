@@ -10,7 +10,7 @@ describe LogsCfPlugin::LoggregatorClient do
     client_double = double('client',
                            token: double('token', {auth_header: 'auth_header'}),
                            current_space: double('space', guid: 'space_id'),
-                           current_organization: double('org', guid: 'org_id', name: 'org'),
+                           current_organization: double('org', guid: 'org_id', name: 'org')
     )
 
     plugin.input = { trace: false}
@@ -39,25 +39,9 @@ describe LogsCfPlugin::LoggregatorClient do
       LogsCfPlugin::LoggregatorClient.any_instance.should_not_receive(:dump_messages)
     end
 
-    it "shows the help and fails if neither app nor space are given" do
+    it "shows the help and fails if app not given" do
       plugin.input = {
           app: nil,
-          space: false,
-          org: false,
-          recent: false
-      }
-
-      Mothership::Help.should_receive(:command_help)
-      expect {
-        plugin.logs
-      }.to raise_exception
-    end
-
-    it "shows the help and fails if the space/org selection is ambiguous" do
-      plugin.input = {
-          app: nil,
-          space: true,
-          org: true,
           recent: false
       }
 

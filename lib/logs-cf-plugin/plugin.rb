@@ -12,20 +12,13 @@ module LogsCfPlugin
     desc "Tail or dump logs for CF applications or spaces"
     group :apps
     input :app, :desc => "App to tail logs from", :argument => :optional, :from_given => by_name(:app)
-    input :space, :type => :boolean, :desc => "Logs of all apps in the current space", :default => false
-    input :org, :type => :boolean, :desc => "Logs of all apps and spaces in the current organization", :default => false
     input :recent, :type => :boolean, :desc => "Dump recent logs instead of tailing", :default => false
 
     def logs
       client.current_organization.name # resolve org name so CC will validate AuthToken
-      guids = [client.current_organization.guid, client.current_space.guid, input[:app].try(:guid)]
+      app_id = input[:app].try(:guid)
 
-      log_target = LogTarget.new(input[:org], input[:space], guids)
-
-      if log_target.ambiguous?
-        Mothership::Help.command_help(@@commands[:logs])
-        fail "Please provide either --space or --org, but not both."
-      end
+      log_target = LogTarget.new(app_id)
 
       unless log_target.valid?
         Mothership::Help.command_help(@@commands[:logs])
