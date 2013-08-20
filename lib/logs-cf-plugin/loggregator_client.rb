@@ -1,4 +1,4 @@
-require 'log_message/log_message.pb'
+require 'loggregator_messages'
 require 'faye/websocket'
 require 'eventmachine'
 require 'uri'

@@ -56,7 +56,6 @@ module LogsCfPlugin
       message.message_type = type
       message.app_id = "1234"
       message.source_id = "5678"
-      message.organization_id = "9876"
       message.source_type = LogMessage::SourceType::DEA
       result = message.encode.buf
       result.unpack("C*")
@@ -75,8 +74,6 @@ module LogsCfPlugin
         ws.on :open do |event|
           if env['QUERY_STRING'] =~ /bad_app_id/
             ws.send(corrupt_log_message)
-          elsif req.params["space"] == nil
-            ws.close nil, 4000
           elsif env['HTTP_AUTHORIZATION'] == ""
             ws.close nil, 4001
           elsif env['HTTP_AUTHORIZATION'] == "I am unauthorized"
@@ -118,7 +115,7 @@ module LogsCfPlugin
     end
 
     def request_with_app_id(request, app_id)
-      request.request_method == "GET" && request.path == "/dump/" && request.params == {"org" => "org_id", "space" => "space_id", "app" => app_id}
+      request.request_method == "GET" && request.path == "/dump/" && request.params == {"app" => app_id}
     end
   end
 end

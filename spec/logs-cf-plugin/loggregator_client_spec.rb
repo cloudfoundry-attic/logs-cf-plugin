@@ -36,7 +36,7 @@ describe LogsCfPlugin::LoggregatorClient do
 
     it "outputs data from the server's stdout without color" do
       client_thread = Thread.new do
-        loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
+        loggregator_client.listen({app: "app_id"})
       end
 
       expect(server_response).to eq("Connected to server.\n1234 5678 STDOUT Hello\n")
@@ -59,10 +59,10 @@ describe LogsCfPlugin::LoggregatorClient do
 
       it "outputs data from the server" do
         client_thread = Thread.new do
-          loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
+          loggregator_client.listen({app: "app_id"})
         end
 
-        expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?org=org_id&space=space_id&app=app_id\nConnected to server.\n1234 5678 STDOUT Hello\n")
+        expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?app=app_id\nConnected to server.\n1234 5678 STDOUT Hello\n")
 
         Thread.kill(client_thread)
       end
@@ -91,7 +91,7 @@ describe LogsCfPlugin::LoggregatorClient do
       LogsCfPlugin::LoggregatorClient.any_instance.stub(:keep_alive_interval).and_return(1)
 
       client_thread = Thread.new do
-        loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
+        loggregator_client.listen({app: "app_id"})
       end
 
       sleep 2.5
@@ -111,7 +111,7 @@ describe LogsCfPlugin::LoggregatorClient do
 
       it "encourages user to upgrade" do
         client_thread = Thread.new do
-          loggregator_client.listen({org: "org_id", space: "space_id", app: "bad_app_id"})
+          loggregator_client.listen({app: "bad_app_id"})
         end
 
         sleep 2.5
@@ -123,21 +123,10 @@ describe LogsCfPlugin::LoggregatorClient do
     end
 
     describe "websocket connection closed" do
-      it "outputs error when server returns 'no space given' code" do
-        client_thread = Thread.new do
-          loggregator_client.listen({org: "org_id", app: "app_id"})
-        end
-
-        EM.should_receive(:stop).once
-        expect(server_response).to match /Error: No space given\./
-
-        Thread.kill(client_thread)
-      end
-
       it "outputs error when no auth token given" do
         loggregator_client = described_class.new("localhost", "", fake_output, false)
         client_thread = Thread.new do
-          loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
+          loggregator_client.listen({app: "app_id"})
         end
 
         EM.should_receive(:stop).once
@@ -149,7 +138,7 @@ describe LogsCfPlugin::LoggregatorClient do
       it "outputs error when server returns 'unauthorized' code" do
         loggregator_client = described_class.new("localhost", "I am unauthorized", fake_output, false)
         client_thread = Thread.new do
-          loggregator_client.listen({org: "org_id", space: "space_id", app: "app_id"})
+          loggregator_client.listen({app: "app_id"})
         end
 
         EM.should_receive(:stop).once
@@ -164,7 +153,7 @@ describe LogsCfPlugin::LoggregatorClient do
   describe "dumping logs" do
     it "outputs the messages from the server" do
       loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
-      loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
+      loggregator_client.dump_messages({app: "app_id"})
 
       output = fake_output.string.split("\n")
 
@@ -174,7 +163,7 @@ describe LogsCfPlugin::LoggregatorClient do
 
     it "colors the stderr messages" do
       loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
-      loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "stderr"})
+      loggregator_client.dump_messages({app: "stderr"})
 
       output = fake_output.string.split("\n")
 
@@ -184,7 +173,7 @@ describe LogsCfPlugin::LoggregatorClient do
 
     it "outputs nothing the auth code is invalid" do
       loggregator_client = described_class.new("localhost:8000", "bad_auth_token", fake_output, false)
-      loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
+      loggregator_client.dump_messages({app: "app_id"})
 
       expect(fake_output.string).to eq ""
     end
@@ -194,16 +183,16 @@ describe LogsCfPlugin::LoggregatorClient do
       let(:loggregator_client) { described_class.new("localhost:8000", "auth_token", fake_output, true) }
 
       it "returns the messages from the server" do
-        loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "app_id"})
+        loggregator_client.dump_messages({app: "app_id"})
 
-        expect(fake_output.string).to include "REQUEST: GET /dump/?org=org_id&space=space_id&app=app_id"
+        expect(fake_output.string).to include "REQUEST: GET /dump/?app=app_id"
         expect(fake_output.string).to include "RESPONSE: [200]"
         expect(fake_output.string).to include "RESPONSE_BODY:"
       end
     end
     it "encourages the user to upgrade" do
       loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
-      output = loggregator_client.dump_messages({org: "org_id", space: "space_id", app: "bad_app_id"})
+      output = loggregator_client.dump_messages({app: "bad_app_id"})
 
       sleep 2.5
 

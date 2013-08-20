@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 # Specify your gem's dependencies in logs-cf-plugin.gemspec
 gemspec
 
+gem "loggregator_messages", :git => "https://github.com/cloudfoundry/loggregator_messages.git"
 # These are here because Travis bundles without development
 group :test do
   gem "rake", "~> 10.1.0"
