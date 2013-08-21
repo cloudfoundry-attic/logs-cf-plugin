@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "logs-cf-plugin"
-  spec.version       = '0.0.30.pre'
+  spec.version       = '0.0.31.pre'
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ["Pivotal"]
   spec.email         = ["vcap-dev@googlegroups.com"]
