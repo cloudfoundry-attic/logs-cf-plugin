@@ -79,9 +79,7 @@ describe LogsCfPlugin::LoggregatorClient do
       end
 
       it "sends the authorization token as a header" do
-        IpLookup.stub(:best_ip_info).and_return("best_ip_info")
-
-        headers = {"Origin" => "best_ip_info", "Authorization" => "auth_token"}
+        headers = {"Origin" => "http://localhost", "Authorization" => "auth_token"}
         Faye::WebSocket::Client.should_receive(:new).with(anything, nil, :headers => headers).and_return(mock_ws_server)
         loggregator_client.listen({})
       end

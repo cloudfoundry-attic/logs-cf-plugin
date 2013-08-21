@@ -5,7 +5,6 @@ require 'loggregator_messages'
 require 'uri'
 
 module LogsCfPlugin
-  require 'logs-cf-plugin/ip_lookup'
   require 'logs-cf-plugin/log_target'
   require 'logs-cf-plugin/message_writer'
   require 'logs-cf-plugin/loggregator_client'

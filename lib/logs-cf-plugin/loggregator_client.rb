@@ -15,7 +15,7 @@ module LogsCfPlugin
       output.puts "websocket_address: #{websocket_address}" if trace
 
       EM.run {
-        ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => IpLookup.best_ip_info, "Authorization" => user_token})
+        ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => "http://localhost", "Authorization" => user_token})
 
         ws.on :open do |event|
           output.puts("Connected to server.")
