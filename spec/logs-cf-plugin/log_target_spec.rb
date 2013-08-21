@@ -1,4 +1,4 @@
-require "logs-cf-plugin/log_target"
+require "spec_helper"
 
 describe LogsCfPlugin::LogTarget do
 

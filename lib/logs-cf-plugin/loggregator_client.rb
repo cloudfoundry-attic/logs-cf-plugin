@@ -1,9 +1,3 @@
-require 'loggregator_messages'
-require 'faye/websocket'
-require 'eventmachine'
-require 'uri'
-require 'logs-cf-plugin/message_writer'
-
 module LogsCfPlugin
   class LoggregatorClient
     include CFoundry::TraceHelpers

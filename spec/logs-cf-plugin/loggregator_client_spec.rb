@@ -1,6 +1,4 @@
-require 'support/fake_loggregator'
-require 'logs-cf-plugin/plugin'
-require 'thin'
+require "spec_helper"
 
 describe LogsCfPlugin::LoggregatorClient do
 

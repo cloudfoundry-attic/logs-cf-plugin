@@ -1,4 +1,4 @@
-require 'logs-cf-plugin/plugin'
+require "spec_helper"
 
 describe LogsCfPlugin::LoggregatorClient do
   let(:plugin) { LogsCfPlugin::Plugin.new }

@@ -1,9 +1,13 @@
 require 'cf'
+require 'eventmachine'
+require 'faye/websocket'
+require 'loggregator_messages'
+require 'uri'
 
 module LogsCfPlugin
-  require 'logs-cf-plugin/loggregator_client'
   require 'logs-cf-plugin/log_target'
   require 'logs-cf-plugin/message_writer'
+  require 'logs-cf-plugin/loggregator_client'
 
   class Plugin < CF::CLI
     include LoginRequirements
