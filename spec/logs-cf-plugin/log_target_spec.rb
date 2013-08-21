@@ -1,7 +1,6 @@
 require "spec_helper"
 
 describe LogsCfPlugin::LogTarget do
-
   describe "valid?" do
     it "is valid if app id is present" do
       expect(described_class.new("appId").valid?).to eql true
