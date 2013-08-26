@@ -3,14 +3,17 @@ require "spec_helper"
 describe LogsCfPlugin::LoggregatorClient do
   let(:plugin) { LogsCfPlugin::Plugin.new }
 
-  def stub_plugin_client_to_prevent_test_failure_on_travis
+  def stub_plugin_client_to_prevent_test_failure_on_travis(use_ssl = true)
     #even if not directly used in the tests below, client needs to be stubbed for all tests!
     #If removed, locally these tests might still pass, if ~/.cf is present. It will, however, fail on travis
+
+    target_uri = use_ssl ? 'https' : 'http'
 
     client_double = double('client',
                            token: double('token', {auth_header: 'auth_header'}),
                            current_space: double('space', guid: 'space_id'),
-                           current_organization: double('org', guid: 'org_id', name: 'org')
+                           current_organization: double('org', guid: 'org_id', name: 'org'),
+                           target: "#{target_uri}://test.io"
     )
 
     plugin.input = { trace: false}
@@ -28,7 +31,18 @@ describe LogsCfPlugin::LoggregatorClient do
     LogsCfPlugin::LogTarget.stub(:new).and_return(mock_log_target)
 
     mock_loggreator_client = double().as_null_object
-    LogsCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false).and_return(mock_loggreator_client)
+    LogsCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, true).and_return(mock_loggreator_client)
+
+    plugin.logs
+  end
+
+  it "should new up a loggregator client when no ssl target given" do
+    stub_plugin_client_to_prevent_test_failure_on_travis(false)
+    mock_log_target = double("logtarget", :valid? => true, :ambiguous? => false, :query_params => {})
+    LogsCfPlugin::LogTarget.stub(:new).and_return(mock_log_target)
+
+    mock_loggreator_client = double().as_null_object
+    LogsCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, false).and_return(mock_loggreator_client)
 
     plugin.logs
   end

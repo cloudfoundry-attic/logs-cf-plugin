@@ -29,7 +29,7 @@ module LogsCfPlugin
         fail "Please provide an application to log."
       end
 
-      loggregator_client = LoggregatorClient.new(loggregator_host, client.token.auth_header, STDOUT, input[:trace])
+      loggregator_client = LoggregatorClient.new(loggregator_host, client.token.auth_header, STDOUT, input[:trace], use_ssl)
 
       if input[:recent]
         loggregator_client.dump_messages(log_target.query_params)
@@ -45,6 +45,10 @@ module LogsCfPlugin
     def loggregator_host
       target_base = client.target.sub(/^https?:\/\/([^\.]+\.)?(.+)\/?/, '\2')
       "loggregator.#{target_base}"
+    end
+
+    def use_ssl
+      client.target.start_with?('https')
     end
   end
 end

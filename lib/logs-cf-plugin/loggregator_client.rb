@@ -3,15 +3,21 @@ module LogsCfPlugin
     include CFoundry::TraceHelpers
     include MessageWriter
 
-    def initialize(loggregator_host, user_token, output, trace)
+    def initialize(loggregator_host, user_token, output, trace, use_ssl = true)
       @output = output
       @loggregator_host = loggregator_host
       @user_token = user_token
       @trace = trace
+      @use_ssl = use_ssl
     end
 
     def listen(query_params)
-      websocket_address = "wss://#{loggregator_host}:4443/tail/?#{hash_to_query(query_params)}"
+      if use_ssl
+        websocket_address = "wss://#{loggregator_host}:4443/tail/?#{hash_to_query(query_params)}"
+      else
+        websocket_address = "ws://#{loggregator_host}/tail/?#{hash_to_query(query_params)}"
+      end
+
       output.puts "websocket_address: #{websocket_address}" if trace
 
       EM.run {
@@ -58,9 +64,10 @@ module LogsCfPlugin
     end
 
     def dump_messages(query_params)
-      uri = URI.parse("https://#{loggregator_host}/dump/?#{hash_to_query(query_params)}")
+      prefix = use_ssl ? 'https' : 'http'
+      uri = URI.parse("#{prefix}://#{loggregator_host}/dump/?#{hash_to_query(query_params)}")
       http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
+      http.use_ssl = use_ssl
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
       request = Net::HTTP::Get.new(uri.request_uri)
@@ -126,6 +133,6 @@ module LogsCfPlugin
       return URI.encode(hash.map { |k, v| "#{k}=#{v}" }.join("&"))
     end
 
-    attr_reader :output, :loggregator_host, :user_token, :trace
+    attr_reader :output, :loggregator_host, :user_token, :trace, :use_ssl
   end
 end
