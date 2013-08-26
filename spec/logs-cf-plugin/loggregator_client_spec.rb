@@ -199,4 +199,29 @@ describe LogsCfPlugin::LoggregatorClient do
     end
 
   end
+
+  describe "connect sever without ssl enabled" do
+    # Only check the uri since we already check the protocol for ssl scenario
+    let(:loggregator_client) { described_class.new("localhost", "auth_token", fake_output, false, false) }
+
+    it "connect websocket using ws and 80 port" do
+      exp_headers = { "Origin"=>"http://localhost", "Authorization"=>"auth_token" }
+      exp_uri =  'ws://localhost/tail/?app=app_id'
+
+      Faye::WebSocket::Client.should_receive(:new).with(exp_uri, nil, :headers=> exp_headers).and_return(Faye::WebSocket::Client)
+      Faye::WebSocket::Client.stub(:on) {}
+      loggregator_client.listen({app: "app_id"})
+    end
+
+    it "dump messages via http 80 port" do
+      Net::HTTP.should_receive(:new).with('localhost', 80).and_return(Net::HTTP)
+      Net::HTTP.should_receive(:use_ssl=).with(false)
+      Net::HTTP.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
+      Net::HTTP.should_receive(:request).and_return(Net::HTTPResponse)
+      Net::HTTPResponse.should_receive(:code).and_return(200)
+      loggregator_client.dump_messages({app: "app_id"})
+    end
+
+  end
+
 end
