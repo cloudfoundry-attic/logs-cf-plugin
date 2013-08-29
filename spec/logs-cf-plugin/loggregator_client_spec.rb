@@ -37,7 +37,7 @@ describe LogsCfPlugin::LoggregatorClient do
         loggregator_client.listen({app: "app_id"})
       end
 
-      expect(server_response).to eq("Connected to server.\n1234 5678 STDOUT Hello\n")
+      expect(server_response).to eq("Connected to server.\n1234 CF[DEA] 5678 STDOUT Hello\n")
 
       Thread.kill(client_thread)
     end
@@ -47,7 +47,7 @@ describe LogsCfPlugin::LoggregatorClient do
         loggregator_client.listen({org: "org_id", space: "space_id", app: "stderr"})
       end
 
-      expect(server_response).to eq("Connected to server.\n\e[35m1234 5678 STDERR Hello\e[0m\n")
+      expect(server_response).to eq("Connected to server.\n\e[35m1234 CF[DEA] 5678 STDERR Hello\e[0m\n")
 
       Thread.kill(client_thread)
     end
@@ -60,7 +60,7 @@ describe LogsCfPlugin::LoggregatorClient do
           loggregator_client.listen({app: "app_id"})
         end
 
-        expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?app=app_id\nConnected to server.\n1234 5678 STDOUT Hello\n")
+        expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?app=app_id\nConnected to server.\n1234 CF[DEA] 5678 STDOUT Hello\n")
 
         Thread.kill(client_thread)
       end
@@ -155,8 +155,8 @@ describe LogsCfPlugin::LoggregatorClient do
 
       output = fake_output.string.split("\n")
 
-      expect(output[0]).to eq "myApp  STDOUT Some data"
-      expect(output[1]).to eq "myApp  STDOUT More stuff"
+      expect(output[0]).to eq "myApp CF[DEA]  STDOUT Some data"
+      expect(output[1]).to eq "myApp CF[DEA]  STDOUT More stuff"
     end
 
     it "colors the stderr messages" do
@@ -165,8 +165,8 @@ describe LogsCfPlugin::LoggregatorClient do
 
       output = fake_output.string.split("\n")
 
-      expect(output[0]).to eq "\e[35mmyApp  STDERR Some data\e[0m"
-      expect(output[1]).to eq "\e[35mmyApp  STDERR More stuff\e[0m"
+      expect(output[0]).to eq "\e[35mmyApp CF[DEA]  STDERR Some data\e[0m"
+      expect(output[1]).to eq "\e[35mmyApp CF[DEA]  STDERR More stuff\e[0m"
     end
 
     it "outputs nothing the auth code is invalid" do

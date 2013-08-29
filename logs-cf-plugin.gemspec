@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "logs-cf-plugin"
-  spec.version       = '0.0.33.pre'
+  spec.version       = '0.0.34.pre'
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ["Pivotal"]
   spec.email         = ["vcap-dev@googlegroups.com"]
@@ -19,5 +19,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "cf", "~> 5.0"
   spec.add_dependency "faye-websocket", "~> 0.6.1"
   spec.add_dependency "beefcake", "~> 0.3.7"
-  spec.add_dependency "loggregator_messages", "~> 0.0.1.pre"
+  spec.add_dependency "loggregator_messages", "~> 0.0.3.pre"
 end
