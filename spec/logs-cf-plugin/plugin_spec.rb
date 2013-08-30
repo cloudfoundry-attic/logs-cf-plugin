@@ -67,16 +67,19 @@ describe LogsCfPlugin::LoggregatorClient do
   end
 
   describe "success cases" do
+
+    let(:mock_log_target) {
+      double("logtarget", :valid? => true, :ambiguous? => false, :query_params => {some: "hash"})
+    }
+
     before do
-      LogsCfPlugin::LogTarget.any_instance.stub(:valid?).and_return(true)
-      LogsCfPlugin::LogTarget.any_instance.stub(:ambiguous?).and_return(false)
-      LogsCfPlugin::LogTarget.any_instance.stub(:query_params).and_return({some: "hash"})
+      LogsCfPlugin::LogTarget.stub(:new).and_return(mock_log_target)
     end
 
     describe "when you are tailing a log" do
       it "calls the loggregator_client the query_params hash from the log_target" do
         plugin.input = {}
-        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).with({some: "hash"})
+        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).with(mock_log_target)
         plugin.logs
       end
     end
@@ -84,7 +87,7 @@ describe LogsCfPlugin::LoggregatorClient do
     describe "when you are dumping a log" do
       it "calls the loggregator_client the query_params hash from the log_target" do
         plugin.input = {recent: true}
-        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:dump_messages).with({some: "hash"}).and_return([])
+        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:dump_messages).with(mock_log_target).and_return([])
         plugin.logs
       end
     end

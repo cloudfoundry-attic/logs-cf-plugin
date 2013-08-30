@@ -15,6 +15,7 @@ def log_message(type)
 end
 
 describe MessageWriter do
+  let(:log_target) { LogsCfPlugin::LogTarget.new(double(guid: "app_id", name: "app_name"))}
   let (:output) { StringIO.new }
   subject (:test_writer) { TestMessageWriter.new }
   before(:each) {
@@ -22,12 +23,12 @@ describe MessageWriter do
   }
 
   it 'shows the full message' do
-    subject.write(output, log_message(LogMessage::MessageType::OUT))
-    expect(output.string).to eql "1234 CF[Router] 12 STDOUT Hello\n"
+    subject.write(log_target, output, log_message(LogMessage::MessageType::OUT))
+    expect(output.string).to eql "app_name CF[Router] 12 STDOUT Hello\n"
   end
 
   it 'colorizes messages with source of stderr' do
-    subject.write(output, log_message(LogMessage::MessageType::ERR))
-    expect(output.string).to include "\e[35m1234 CF[Router] 12 STDERR Hello\e[0m\n"
+    subject.write(log_target, output, log_message(LogMessage::MessageType::ERR))
+    expect(output.string).to include "\e[35mapp_name CF[Router] 12 STDERR Hello\e[0m\n"
   end
 end

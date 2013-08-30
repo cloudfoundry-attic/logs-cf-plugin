@@ -11,11 +11,11 @@ module LogsCfPlugin
       @use_ssl = use_ssl
     end
 
-    def listen(query_params)
+    def listen(log_target)
       if use_ssl
-        websocket_address = "wss://#{loggregator_host}:4443/tail/?#{hash_to_query(query_params)}"
+        websocket_address = "wss://#{loggregator_host}:4443/tail/?#{hash_to_query(log_target.query_params)}"
       else
-        websocket_address = "ws://#{loggregator_host}/tail/?#{hash_to_query(query_params)}"
+        websocket_address = "ws://#{loggregator_host}/tail/?#{hash_to_query(log_target.query_params)}"
       end
 
       output.puts "websocket_address: #{websocket_address}" if trace
@@ -33,7 +33,7 @@ module LogsCfPlugin
         ws.on :message do |event|
           begin
             received_message = LogMessage.decode(event.data.pack("C*"))
-            write(output, received_message)
+            write(log_target, output, received_message)
           rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError,  Beefcake::Message::InvalidValueError
             output.puts("Error parsing data. Please ensure your gem is the latest version.")
             ws.close
@@ -63,9 +63,9 @@ module LogsCfPlugin
       }
     end
 
-    def dump_messages(query_params)
+    def dump_messages(log_target)
       prefix = use_ssl ? 'https' : 'http'
-      uri = URI.parse("#{prefix}://#{loggregator_host}/dump/?#{hash_to_query(query_params)}")
+      uri = URI.parse("#{prefix}://#{loggregator_host}/dump/?#{hash_to_query(log_target.query_params)}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = use_ssl
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -106,7 +106,7 @@ module LogsCfPlugin
       end
 
       messages.each do |m|
-        write(output, m)
+        write(log_target, output, m)
       end
     rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError
       output.puts("Error parsing data. Please ensure your gem is the latest version.")

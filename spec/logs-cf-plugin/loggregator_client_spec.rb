@@ -18,6 +18,8 @@ describe LogsCfPlugin::LoggregatorClient do
     @fake_server.stop
   end
 
+  let(:log_target) { LogsCfPlugin::LogTarget.new(double(guid: "app_id", name: "app_name"))}
+
   describe "listening to logs" do
     def server_response
       tries = 0
@@ -34,20 +36,21 @@ describe LogsCfPlugin::LoggregatorClient do
 
     it "outputs data from the server's stdout without color" do
       client_thread = Thread.new do
-        loggregator_client.listen({app: "app_id"})
+        loggregator_client.listen(log_target)
       end
 
-      expect(server_response).to eq("Connected to server.\n1234 CF[DEA] 5678 STDOUT Hello\n")
+      expect(server_response).to eq("Connected to server.\napp_name CF[DEA] 5678 STDOUT Hello\n")
 
       Thread.kill(client_thread)
     end
 
     it "outputs data from the server's stderr without color" do
+      log_target.stub(:app_id).and_return("stderr")
       client_thread = Thread.new do
-        loggregator_client.listen({org: "org_id", space: "space_id", app: "stderr"})
+        loggregator_client.listen(log_target)
       end
 
-      expect(server_response).to eq("Connected to server.\n\e[35m1234 CF[DEA] 5678 STDERR Hello\e[0m\n")
+      expect(server_response).to eq("Connected to server.\n\e[35mapp_name CF[DEA] 5678 STDERR Hello\e[0m\n")
 
       Thread.kill(client_thread)
     end
@@ -57,10 +60,10 @@ describe LogsCfPlugin::LoggregatorClient do
 
       it "outputs data from the server" do
         client_thread = Thread.new do
-          loggregator_client.listen({app: "app_id"})
+          loggregator_client.listen(log_target)
         end
 
-        expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?app=app_id\nConnected to server.\n1234 CF[DEA] 5678 STDOUT Hello\n")
+        expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?app=app_id\nConnected to server.\napp_name CF[DEA] 5678 STDOUT Hello\n")
 
         Thread.kill(client_thread)
       end
@@ -68,6 +71,7 @@ describe LogsCfPlugin::LoggregatorClient do
 
     describe "the websocket request" do
       let(:mock_ws_server) { double("mock_ws_server").as_null_object }
+      let(:mock_log_target) { double(query_params: {some: 'query_params', other: 'value'})}
 
       before do
         EM.stub(:run).and_yield
@@ -75,13 +79,13 @@ describe LogsCfPlugin::LoggregatorClient do
 
       it "constructs a query url using the given params hash" do
         Faye::WebSocket::Client.should_receive(:new).with("wss://localhost:4443/tail/?some=query_params&other=value", nil, anything).and_return(mock_ws_server)
-        loggregator_client.listen(some: 'query_params', other: 'value')
+        loggregator_client.listen(mock_log_target)
       end
 
       it "sends the authorization token as a header" do
         headers = {"Origin" => "http://localhost", "Authorization" => "auth_token"}
         Faye::WebSocket::Client.should_receive(:new).with(anything, nil, :headers => headers).and_return(mock_ws_server)
-        loggregator_client.listen({})
+        loggregator_client.listen(log_target)
       end
     end
 
@@ -89,7 +93,7 @@ describe LogsCfPlugin::LoggregatorClient do
       LogsCfPlugin::LoggregatorClient.any_instance.stub(:keep_alive_interval).and_return(1)
 
       client_thread = Thread.new do
-        loggregator_client.listen({app: "app_id"})
+        loggregator_client.listen(log_target)
       end
 
       sleep 2.5
@@ -100,6 +104,10 @@ describe LogsCfPlugin::LoggregatorClient do
     end
 
     describe "upgrade info" do
+      before do
+        log_target.stub(:app_id).and_return("bad_app_id")
+      end
+
       after do
         @fake_server.stop
 
@@ -109,7 +117,7 @@ describe LogsCfPlugin::LoggregatorClient do
 
       it "encourages user to upgrade" do
         client_thread = Thread.new do
-          loggregator_client.listen({app: "bad_app_id"})
+          loggregator_client.listen(log_target)
         end
 
         sleep 2.5
@@ -124,7 +132,7 @@ describe LogsCfPlugin::LoggregatorClient do
       it "outputs error when no auth token given" do
         loggregator_client = described_class.new("localhost", "", fake_output, false)
         client_thread = Thread.new do
-          loggregator_client.listen({app: "app_id"})
+          loggregator_client.listen(log_target)
         end
 
         EM.should_receive(:stop).once
@@ -136,7 +144,7 @@ describe LogsCfPlugin::LoggregatorClient do
       it "outputs error when server returns 'unauthorized' code" do
         loggregator_client = described_class.new("localhost", "I am unauthorized", fake_output, false)
         client_thread = Thread.new do
-          loggregator_client.listen({app: "app_id"})
+          loggregator_client.listen(log_target)
         end
 
         EM.should_receive(:stop).once
@@ -151,27 +159,28 @@ describe LogsCfPlugin::LoggregatorClient do
   describe "dumping logs" do
     it "outputs the messages from the server" do
       loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
-      loggregator_client.dump_messages({app: "app_id"})
+      loggregator_client.dump_messages(log_target)
 
       output = fake_output.string.split("\n")
 
-      expect(output[0]).to eq "myApp CF[DEA]  STDOUT Some data"
-      expect(output[1]).to eq "myApp CF[DEA]  STDOUT More stuff"
+      expect(output[0]).to eq "app_name CF[DEA]  STDOUT Some data"
+      expect(output[1]).to eq "app_name CF[DEA]  STDOUT More stuff"
     end
 
     it "colors the stderr messages" do
       loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
-      loggregator_client.dump_messages({app: "stderr"})
+      log_target.stub(:app_id).and_return("stderr")
+      loggregator_client.dump_messages(log_target)
 
       output = fake_output.string.split("\n")
 
-      expect(output[0]).to eq "\e[35mmyApp CF[DEA]  STDERR Some data\e[0m"
-      expect(output[1]).to eq "\e[35mmyApp CF[DEA]  STDERR More stuff\e[0m"
+      expect(output[0]).to eq "\e[35mapp_name CF[DEA]  STDERR Some data\e[0m"
+      expect(output[1]).to eq "\e[35mapp_name CF[DEA]  STDERR More stuff\e[0m"
     end
 
     it "outputs nothing the auth code is invalid" do
       loggregator_client = described_class.new("localhost:8000", "bad_auth_token", fake_output, false)
-      loggregator_client.dump_messages({app: "app_id"})
+      loggregator_client.dump_messages(log_target)
 
       expect(fake_output.string).to eq ""
     end
@@ -181,7 +190,7 @@ describe LogsCfPlugin::LoggregatorClient do
       let(:loggregator_client) { described_class.new("localhost:8000", "auth_token", fake_output, true) }
 
       it "returns the messages from the server" do
-        loggregator_client.dump_messages({app: "app_id"})
+        loggregator_client.dump_messages(log_target)
 
         expect(fake_output.string).to include "REQUEST: GET /dump/?app=app_id"
         expect(fake_output.string).to include "RESPONSE: [200]"
@@ -189,8 +198,9 @@ describe LogsCfPlugin::LoggregatorClient do
       end
     end
     it "encourages the user to upgrade" do
+      log_target.stub(:app_id).and_return("bad_app_id")
       loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
-      output = loggregator_client.dump_messages({app: "bad_app_id"})
+      output = loggregator_client.dump_messages(log_target)
 
       sleep 2.5
 
@@ -210,7 +220,7 @@ describe LogsCfPlugin::LoggregatorClient do
 
       Faye::WebSocket::Client.should_receive(:new).with(exp_uri, nil, :headers=> exp_headers).and_return(Faye::WebSocket::Client)
       Faye::WebSocket::Client.stub(:on) {}
-      loggregator_client.listen({app: "app_id"})
+      loggregator_client.listen(log_target)
     end
 
     it "dump messages via http 80 port" do
@@ -219,7 +229,7 @@ describe LogsCfPlugin::LoggregatorClient do
       Net::HTTP.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
       Net::HTTP.should_receive(:request).and_return(Net::HTTPResponse)
       Net::HTTPResponse.should_receive(:code).and_return(200)
-      loggregator_client.dump_messages({app: "app_id"})
+      loggregator_client.dump_messages(log_target)
     end
 
   end

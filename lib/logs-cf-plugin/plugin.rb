@@ -20,9 +20,9 @@ module LogsCfPlugin
 
     def logs
       client.current_organization.name # resolve org name so CC will validate AuthToken
-      app_id = input[:app].try(:guid)
 
-      log_target = LogTarget.new(app_id)
+
+      log_target = LogTarget.new(input[:app])
 
       unless log_target.valid?
         Mothership::Help.command_help(@@commands[:logs])
@@ -32,9 +32,9 @@ module LogsCfPlugin
       loggregator_client = LoggregatorClient.new(loggregator_host, client.token.auth_header, STDOUT, input[:trace], use_ssl)
 
       if input[:recent]
-        loggregator_client.dump_messages(log_target.query_params)
+        loggregator_client.dump_messages(log_target)
       else
-        loggregator_client.listen(log_target.query_params)
+        loggregator_client.listen(log_target)
       end
     end
 
