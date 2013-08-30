@@ -85,7 +85,19 @@ module LogsCfPlugin
 
       response = http.request(request)
 
-      return [] unless response.code == "200"
+      case response.code
+        when "200"
+          # fall thru
+        when "401"
+          output.puts("Unauthorized")
+          return
+        when "404"
+          output.puts("App #{log_target.app_name} not found")
+          return
+        else
+          output.puts("Error connecting to server #{response.code}")
+          return
+      end
 
       response_bytes = StringIO.new(response.body)
       messages = []

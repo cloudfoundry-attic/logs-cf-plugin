@@ -178,11 +178,19 @@ describe LogsCfPlugin::LoggregatorClient do
       expect(output[1]).to eq "\e[35mapp_name CF[DEA]  STDERR More stuff\e[0m"
     end
 
-    it "outputs nothing the auth code is invalid" do
+    it "outputs message the auth code is invalid" do
       loggregator_client = described_class.new("localhost:8000", "bad_auth_token", fake_output, false)
       loggregator_client.dump_messages(log_target)
 
-      expect(fake_output.string).to eq ""
+      expect(fake_output.string).to eq "Unauthorized\n"
+    end
+
+    it "outputs message if the app is not found" do
+      loggregator_client = described_class.new("localhost:8000", "auth_token", fake_output, false)
+      log_target.stub(:app_id).and_return("unknown")
+      loggregator_client.dump_messages(log_target)
+
+      expect(fake_output.string).to eq "App #{log_target.app_name} not found\n"
     end
 
     describe "with tracing" do
@@ -228,7 +236,7 @@ describe LogsCfPlugin::LoggregatorClient do
       Net::HTTP.should_receive(:use_ssl=).with(false)
       Net::HTTP.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
       Net::HTTP.should_receive(:request).and_return(Net::HTTPResponse)
-      Net::HTTPResponse.should_receive(:code).and_return(200)
+      Net::HTTPResponse.should_receive(:code).and_return("401")
       loggregator_client.dump_messages(log_target)
     end
 
