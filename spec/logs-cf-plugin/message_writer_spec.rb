@@ -31,12 +31,4 @@ describe MessageWriter do
     subject.write(log_target, output, log_message(LogMessage::MessageType::ERR))
     expect(output.string).to include "\e[35mapp_name CF[Router] 12 STDERR Hello\e[0m\n"
   end
-
-  it 'removes trailing newlines from the message' do
-    message = log_message(LogMessage::MessageType::ERR)
-    message.message = "Hello\n"
-
-    subject.write(log_target, output, message)
-    expect(output.string).to include "\e[35mapp_name CF[Router] 12 STDERR Hello\e[0m\n"
-  end
 end
