@@ -16,7 +16,9 @@ describe LogsCfPlugin::LoggregatorClient do
                            target: "#{target_uri}://test.io"
     )
 
-    plugin.input = { trace: false}
+    plugin.input = {trace: false,
+                    app: double(name: 'app', guid: 'app_id')}
+
     #yep. stubbing the object under test. better way to test this appreciated!
     LogsCfPlugin::Plugin.any_instance.stub(:client).and_return(client_double)
     LogsCfPlugin::Plugin.any_instance.stub(:loggregator_host).and_return("stubbed host")
@@ -27,9 +29,6 @@ describe LogsCfPlugin::LoggregatorClient do
   end
 
   it "should new up a loggregator client correctly" do
-    mock_log_target = double("logtarget", :valid? => true, :ambiguous? => false, :query_params => {})
-    LogsCfPlugin::LogTarget.stub(:new).and_return(mock_log_target)
-
     mock_loggreator_client = double().as_null_object
     LogsCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, true).and_return(mock_loggreator_client)
 
@@ -38,9 +37,6 @@ describe LogsCfPlugin::LoggregatorClient do
 
   it "should new up a loggregator client when no ssl target given" do
     stub_plugin_client_to_prevent_test_failure_on_travis(false)
-    mock_log_target = double("logtarget", :valid? => true, :ambiguous? => false, :query_params => {})
-    LogsCfPlugin::LogTarget.stub(:new).and_return(mock_log_target)
-
     mock_loggreator_client = double().as_null_object
     LogsCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, false).and_return(mock_loggreator_client)
 
@@ -55,8 +51,8 @@ describe LogsCfPlugin::LoggregatorClient do
 
     it "shows the help and fails if app not given" do
       plugin.input = {
-          app: nil,
-          recent: false
+        app: nil,
+        recent: false
       }
 
       Mothership::Help.should_receive(:command_help)
@@ -67,27 +63,17 @@ describe LogsCfPlugin::LoggregatorClient do
   end
 
   describe "success cases" do
-
-    let(:mock_log_target) {
-      double("logtarget", :valid? => true, :ambiguous? => false, :query_params => {some: "hash"})
-    }
-
-    before do
-      LogsCfPlugin::LogTarget.stub(:new).and_return(mock_log_target)
-    end
-
     describe "when you are tailing a log" do
-      it "calls the loggregator_client the query_params hash from the log_target" do
-        plugin.input = {}
-        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).with(mock_log_target)
+      it "calls the loggregator_client with the app" do
+        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).with(plugin.input[:app])
         plugin.logs
       end
     end
 
     describe "when you are dumping a log" do
-      it "calls the loggregator_client the query_params hash from the log_target" do
-        plugin.input = {recent: true}
-        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:dump_messages).with(mock_log_target).and_return([])
+      it "calls the loggregator_client with the app" do
+        plugin.input.merge!(recent: true)
+        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:dump_messages).with(plugin.input[:app]).and_return([])
         plugin.logs
       end
     end

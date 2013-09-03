@@ -31,8 +31,8 @@ module LogsCfPlugin
           thin.run(app, :Port => port) do |server|
             # You can set options on the server here, for example to set up SSL:
             server.ssl_options = {
-                :private_key_file => File.join(File.dirname(__FILE__), 'server.key'),
-                :cert_chain_file => File.join(File.dirname(__FILE__), 'server.crt')
+              :private_key_file => File.join(File.dirname(__FILE__), 'server.key'),
+              :cert_chain_file => File.join(File.dirname(__FILE__), 'server.crt')
             }
             server.ssl = true
           end

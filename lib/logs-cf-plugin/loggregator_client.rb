@@ -11,11 +11,11 @@ module LogsCfPlugin
       @use_ssl = use_ssl
     end
 
-    def listen(log_target)
+    def listen(app)
       if use_ssl
-        websocket_address = "wss://#{loggregator_host}:4443/tail/?#{hash_to_query(log_target.query_params)}"
+        websocket_address = "wss://#{loggregator_host}:4443/tail/?app=#{app.guid}"
       else
-        websocket_address = "ws://#{loggregator_host}/tail/?#{hash_to_query(log_target.query_params)}"
+        websocket_address = "ws://#{loggregator_host}/tail/?app=#{app.guid}"
       end
 
       output.puts "websocket_address: #{websocket_address}" if trace
@@ -33,8 +33,8 @@ module LogsCfPlugin
         ws.on :message do |event|
           begin
             received_message = LogMessage.decode(event.data.pack("C*"))
-            write(log_target, output, received_message)
-          rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError,  Beefcake::Message::InvalidValueError
+            write(app, output, received_message)
+          rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError
             output.puts("Error parsing data. Please ensure your gem is the latest version.")
             ws.close
             EM.stop
@@ -63,9 +63,9 @@ module LogsCfPlugin
       }
     end
 
-    def dump_messages(log_target)
+    def dump_messages(app)
       prefix = use_ssl ? 'https' : 'http'
-      uri = URI.parse("#{prefix}://#{loggregator_host}/dump/?#{hash_to_query(log_target.query_params)}")
+      uri = URI.parse("#{prefix}://#{loggregator_host}/dump/?app=#{app.guid}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = use_ssl
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -75,10 +75,10 @@ module LogsCfPlugin
 
       if trace
         request_hash = {
-            :url => uri.request_uri,
-            :method => "GET",
-            :headers => sane_headers(request),
-            :body => ""
+          :url => uri.request_uri,
+          :method => "GET",
+          :headers => sane_headers(request),
+          :body => ""
         }
         output.puts(request_trace(request_hash))
       end
@@ -92,7 +92,7 @@ module LogsCfPlugin
           output.puts("Unauthorized")
           return
         when "404"
-          output.puts("App #{log_target.app_name} not found")
+          output.puts("App #{app.name} not found")
           return
         else
           output.puts("Error connecting to server #{response.code}")
@@ -110,15 +110,15 @@ module LogsCfPlugin
 
       if trace
         response_hash = {
-            :headers => sane_headers(response),
-            :status => response.code,
-            :body => messages
+          :headers => sane_headers(response),
+          :status => response.code,
+          :body => messages
         }
         output.puts(response_trace(response_hash))
       end
 
       messages.each do |m|
-        write(log_target, output, m)
+        write(app, output, m)
       end
     rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError
       output.puts("Error parsing data. Please ensure your gem is the latest version.")

@@ -5,7 +5,6 @@ require 'loggregator_messages'
 require 'uri'
 
 module LogsCfPlugin
-  require 'logs-cf-plugin/log_target'
   require 'logs-cf-plugin/message_writer'
   require 'logs-cf-plugin/loggregator_client'
 
@@ -21,10 +20,7 @@ module LogsCfPlugin
     def logs
       client.current_organization.name # resolve org name so CC will validate AuthToken
 
-
-      log_target = LogTarget.new(input[:app])
-
-      unless log_target.valid?
+      unless input[:app]
         Mothership::Help.command_help(@@commands[:logs])
         fail "Please provide an application to log."
       end
@@ -32,9 +28,9 @@ module LogsCfPlugin
       loggregator_client = LoggregatorClient.new(loggregator_host, client.token.auth_header, STDOUT, input[:trace], use_ssl)
 
       if input[:recent]
-        loggregator_client.dump_messages(log_target)
+        loggregator_client.dump_messages(input[:app])
       else
-        loggregator_client.listen(log_target)
+        loggregator_client.listen(input[:app])
       end
     end
 
