@@ -13,11 +13,11 @@ module LogsCfPlugin
     end
 
     def app_id
-      @app.try(:guid)
+      @app && @app.guid
     end
 
     def app_name
-      @app.try(:name)
+      @app && @app.name
     end
 
     private
