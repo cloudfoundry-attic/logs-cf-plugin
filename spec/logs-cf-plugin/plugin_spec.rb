@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe LogsCfPlugin::LoggregatorClient do
+describe LogsCfPlugin::Plugin do
   let(:plugin) { LogsCfPlugin::Plugin.new }
 
   def stub_plugin_client_to_prevent_test_failure_on_travis(use_ssl = true)
@@ -29,24 +29,28 @@ describe LogsCfPlugin::LoggregatorClient do
   end
 
   it "should new up a loggregator client correctly" do
+    config = double("config")
     mock_loggreator_client = double().as_null_object
-    LogsCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, true).and_return(mock_loggreator_client)
+
+    LogsCfPlugin::ClientConfig.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, true).and_return(config)
+    LogsCfPlugin::TailingLogsClient.should_receive(:new).with(config).and_return(mock_loggreator_client)
 
     plugin.logs
   end
 
   it "should new up a loggregator client when no ssl target given" do
     stub_plugin_client_to_prevent_test_failure_on_travis(false)
-    mock_loggreator_client = double().as_null_object
-    LogsCfPlugin::LoggregatorClient.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, false).and_return(mock_loggreator_client)
+    LogsCfPlugin::TailingLogsClient.any_instance.stub(:logs_for)
+
+    LogsCfPlugin::ClientConfig.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, false)
 
     plugin.logs
   end
 
   describe "failure cases" do
     before do
-      LogsCfPlugin::LoggregatorClient.any_instance.should_not_receive(:listen)
-      LogsCfPlugin::LoggregatorClient.any_instance.should_not_receive(:dump_messages)
+      LogsCfPlugin::TailingLogsClient.any_instance.should_not_receive(:logs_for)
+      LogsCfPlugin::RecentLogsClient.any_instance.should_not_receive(:logs_for)
     end
 
     it "shows the help and fails if app not given" do
@@ -64,8 +68,8 @@ describe LogsCfPlugin::LoggregatorClient do
 
   describe "success cases" do
     describe "when you are tailing a log" do
-      it "calls the loggregator_client with the app" do
-        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:listen).with(plugin.input[:app])
+      it "calls the TailingLogsClient with the app" do
+        LogsCfPlugin::TailingLogsClient.any_instance.should_receive(:logs_for).with(plugin.input[:app])
         plugin.logs
       end
     end
@@ -73,7 +77,7 @@ describe LogsCfPlugin::LoggregatorClient do
     describe "when you are dumping a log" do
       it "calls the loggregator_client with the app" do
         plugin.input.merge!(recent: true)
-        LogsCfPlugin::LoggregatorClient.any_instance.should_receive(:dump_messages).with(plugin.input[:app]).and_return([])
+        LogsCfPlugin::RecentLogsClient.any_instance.should_receive(:logs_for).with(plugin.input[:app])
         plugin.logs
       end
     end

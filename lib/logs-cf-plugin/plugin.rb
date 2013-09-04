@@ -6,7 +6,9 @@ require 'uri'
 
 module LogsCfPlugin
   require 'logs-cf-plugin/message_writer'
-  require 'logs-cf-plugin/loggregator_client'
+  require 'logs-cf-plugin/client_config'
+  require 'logs-cf-plugin/tailing_logs_client'
+  require 'logs-cf-plugin/recent_logs_client'
 
   class Plugin < CF::CLI
     include LoginRequirements
@@ -25,13 +27,10 @@ module LogsCfPlugin
         fail "Please provide an application to log."
       end
 
-      loggregator_client = LoggregatorClient.new(loggregator_host, client.token.auth_header, STDOUT, input[:trace], use_ssl)
+      client_config = ClientConfig.new(loggregator_host, client.token.auth_header, STDOUT, input[:trace], use_ssl)
 
-      if input[:recent]
-        loggregator_client.dump_messages(input[:app])
-      else
-        loggregator_client.listen(input[:app])
-      end
+      client_clazz = input[:recent] ? RecentLogsClient : TailingLogsClient
+      client_clazz.new(client_config).logs_for(input[:app])
     end
 
     ::ManifestsPlugin.default_to_app_from_manifest(:logs, false)
