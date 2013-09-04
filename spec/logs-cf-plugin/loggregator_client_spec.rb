@@ -224,7 +224,9 @@ describe LogsCfPlugin::LoggregatorClient do
     let(:loggregator_client) { described_class.new("localhost", "auth_token", fake_output, false, false) }
 
     it "connect websocket using ws and 80 port" do
-      exp_headers = {"Origin" => "http://localhost", "Authorization" => "auth_token"}
+      IpLookup.stub(:best_ip_info).and_return("best_ip_info")
+
+      exp_headers = {"Origin" => "best_ip_info", "Authorization" => "auth_token"}
       exp_uri = 'ws://localhost/tail/?app=app_id'
 
       Faye::WebSocket::Client.should_receive(:new).with(exp_uri, nil, :headers => exp_headers).and_return(Faye::WebSocket::Client)
