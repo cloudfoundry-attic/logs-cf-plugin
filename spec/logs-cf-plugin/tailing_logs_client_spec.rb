@@ -6,6 +6,9 @@ describe LogsCfPlugin::TailingLogsClient do
 
   before(:all) do
     @fake_server = LogsCfPlugin::FakeLoggregator.start_websocket_app(4443)
+    #using the fake_server for the tests around upgrading the client led to state leakage that we prevent by firing up a second server for that purpose
+    @upgrader_server = LogsCfPlugin::FakeLoggregator.start_websocket_app(4445)
+    @redirector = LogsCfPlugin::FakeLoggregator.start_ws_redirector(4444)
   end
 
   before(:each) do
@@ -15,6 +18,8 @@ describe LogsCfPlugin::TailingLogsClient do
 
   after(:all) do
     @fake_server.stop
+    @redirector.stop
+    @upgrader_server.stop
   end
 
   let(:app) { double(guid: "app_id", name: "app_name") }
@@ -31,7 +36,7 @@ describe LogsCfPlugin::TailingLogsClient do
       fake_output.string
     end
 
-    let(:client) { described_class.new(LogsCfPlugin::ClientConfig.new("localhost", "auth_token", fake_output, false)) }
+    let(:client) { described_class.new(LogsCfPlugin::ClientConfig.new("localhost", 4443, "auth_token", fake_output, false)) }
 
     it "outputs data from the server's stdout without color" do
       client_thread = Thread.new do
@@ -54,8 +59,22 @@ describe LogsCfPlugin::TailingLogsClient do
       Thread.kill(client_thread)
     end
 
+    describe "redirects" do
+      let(:client) { described_class.new(LogsCfPlugin::ClientConfig.new("localhost", 4444, "auth_token", fake_output, false)) }
+
+      it "follows redirects until it gets a 200" do
+        client_thread = Thread.new do
+          client.logs_for(app)
+        end
+
+        expect(server_response).to eq("Connected to server.\napp_name CF[DEA] 5678 STDOUT Hello\n")
+
+        Thread.kill(client_thread)
+      end
+    end
+
     describe "with tracing" do
-      let(:client) { described_class.new(LogsCfPlugin::ClientConfig.new("localhost", "auth_token", fake_output, true)) }
+      let(:client) { described_class.new(LogsCfPlugin::ClientConfig.new("localhost", 4443, "auth_token", fake_output, true)) }
 
       it "outputs data from the server" do
         client_thread = Thread.new do
@@ -73,6 +92,8 @@ describe LogsCfPlugin::TailingLogsClient do
 
       before do
         EM.stub(:run).and_yield
+        Thread.stub(:new).and_yield
+        LogsCfPlugin::TailingLogsClient.any_instance.stub(:wait_for_em_thread_to_finish)
       end
 
       it "constructs a query url using the given app" do
@@ -84,6 +105,20 @@ describe LogsCfPlugin::TailingLogsClient do
         headers = {"Origin" => "http://localhost", "Authorization" => "auth_token"}
         Faye::WebSocket::Client.should_receive(:new).with(anything, nil, :headers => headers).and_return(mock_ws_server)
         client.logs_for(app)
+      end
+
+      describe "connect sever without ssl enabled" do
+        # Only check the uri since we already check the protocol for ssl scenario
+        let(:client) { described_class.new(LogsCfPlugin::ClientConfig.new("localhost", nil, "auth_token", fake_output, false, false)) }
+
+        it "connect websocket using ws and 80 port" do
+          exp_headers = {"Origin" => "http://localhost", "Authorization" => "auth_token"}
+          exp_uri = 'ws://localhost/tail/?app=app_id'
+
+          Faye::WebSocket::Client.should_receive(:new).with(exp_uri, nil, :headers => exp_headers).and_return(Faye::WebSocket::Client)
+          Faye::WebSocket::Client.stub(:on) {}
+          client.logs_for(app)
+        end
       end
     end
 
@@ -102,13 +137,10 @@ describe LogsCfPlugin::TailingLogsClient do
     end
 
     describe "upgrade info" do
+      let(:client) { described_class.new(LogsCfPlugin::ClientConfig.new("localhost", 4445, "auth_token", fake_output, false)) }
+
       before do
         app.stub(:guid).and_return("bad_app_id")
-      end
-
-      after do
-        @fake_server.stop
-        @fake_server = LogsCfPlugin::FakeLoggregator.start_websocket_app(4443)
       end
 
       it "encourages user to upgrade" do
@@ -126,43 +158,25 @@ describe LogsCfPlugin::TailingLogsClient do
 
     describe "websocket connection closed" do
       it "outputs error when no auth token given" do
-        client = described_class.new(LogsCfPlugin::ClientConfig.new("localhost", "", fake_output, false))
+        client = described_class.new(LogsCfPlugin::ClientConfig.new("localhost", 4443, "", fake_output, false))
         client_thread = Thread.new do
           client.logs_for(app)
         end
 
-        EM.should_receive(:stop).once
         expect(server_response).to match /Error: No authorization token given\./
-
         Thread.kill(client_thread)
       end
 
       it "outputs error when server returns 'unauthorized' code" do
-        client = described_class.new(LogsCfPlugin::ClientConfig.new("localhost", "I am unauthorized", fake_output, false))
+        client = described_class.new(LogsCfPlugin::ClientConfig.new("localhost", 4443, "I am unauthorized", fake_output, false))
         client_thread = Thread.new do
           client.logs_for(app)
         end
 
-        EM.should_receive(:stop).once
         expect(server_response).to match /Error: Not authorized\./
-
         Thread.kill(client_thread)
       end
 
-    end
-  end
-
-  describe "connect sever without ssl enabled" do
-    # Only check the uri since we already check the protocol for ssl scenario
-    let(:client) { described_class.new(LogsCfPlugin::ClientConfig.new("localhost", "auth_token", fake_output, false, false)) }
-
-    it "connect websocket using ws and 80 port" do
-      exp_headers = {"Origin" => "http://localhost", "Authorization" => "auth_token"}
-      exp_uri = 'ws://localhost/tail/?app=app_id'
-
-      Faye::WebSocket::Client.should_receive(:new).with(exp_uri, nil, :headers => exp_headers).and_return(Faye::WebSocket::Client)
-      Faye::WebSocket::Client.stub(:on) {}
-      client.logs_for(app)
     end
   end
 end

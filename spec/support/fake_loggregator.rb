@@ -19,6 +19,12 @@ module LogsCfPlugin
       server
     end
 
+      def self.start_ws_redirector(port)
+      server = new
+      server.runApp(server.ws_redirector, port)
+      server
+    end
+
     def stop
       Thread.kill(em_server_thread)
     end
@@ -52,6 +58,12 @@ module LogsCfPlugin
       end
     end
 
+    def ws_redirector
+      proc do |env|
+        [302, {'Content-Type' => 'text','Location' => "wss://localhost:4443#{env['REQUEST_URI']}"}, ['302 found'] ]
+      end
+    end
+
     def dump_app
       lambda do |env|
         request = Rack::Request.new(env)
@@ -72,6 +84,15 @@ module LogsCfPlugin
     end
 
     def runApp(app, port)
+      tries = 0
+      loop do
+        `lsof -w -i :#{port} | grep LISTEN`
+        break if $?.exitstatus > 0
+        tries += 1
+        raise "Needed port didn't free up#{port}" if tries > 50
+        sleep(0.2)
+      end
+
       Faye::WebSocket.load_adapter('thin')
       @em_server_thread = Thread.new do
         EM.run {
@@ -93,7 +114,7 @@ module LogsCfPlugin
         `lsof -w -i :#{port} | grep LISTEN`
         break if $?.exitstatus == 0
         tries += 1
-        raise "could not connect to fake loggregator #{port}" if tries > 50
+        raise "Could not connect to fake loggregator #{port}" if tries > 50
         sleep(0.2)
       end
     end

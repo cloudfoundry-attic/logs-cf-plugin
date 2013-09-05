@@ -8,62 +8,86 @@ module LogsCfPlugin
     end
 
     def logs_for(app)
-      if use_ssl
-        websocket_address = "wss://#{loggregator_host}:4443/tail/?app=#{app.guid}"
-      else
-        websocket_address = "ws://#{loggregator_host}/tail/?app=#{app.guid}"
-      end
+      protocol = use_ssl ? "wss" : "ws"
+      websocket_address = "#{protocol}://#{loggregator_host}#{loggregator_port ? ":#{loggregator_port}" : ""}/tail/?app=#{app.guid}"
 
       output.puts "websocket_address: #{websocket_address}" if trace
 
-      EM.run {
-        ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => "http://localhost", "Authorization" => user_token})
+      make_websocket_request(app, websocket_address)
+    end
 
-        ws.on :open do |event|
-          output.puts("Connected to server.")
-          EventMachine.add_periodic_timer(keep_alive_interval) do
-            ws.send([42])
+    def make_websocket_request(app, websocket_address)
+      redirect_uri = nil
+      @em_client_thread = Thread.new do
+        EM.run {
+          ws = Faye::WebSocket::Client.new(websocket_address, nil, :headers => {"Origin" => "http://localhost", "Authorization" => user_token})
+          ws.on :open do |event|
+            output.puts("Connected to server.")
+            EventMachine.add_periodic_timer(keep_alive_interval) do
+              ws.send([42])
+            end
           end
-        end
 
-        ws.on :message do |event|
-          begin
-            received_message = LogMessage.decode(event.data.pack("C*"))
-            write(app, output, received_message)
-          rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError
-            output.puts("Error parsing data. Please ensure your gem is the latest version.")
-            ws.close
-            EM.stop
+          ws.on :message do |event|
+            begin
+              received_message = LogMessage.decode(event.data.pack("C*"))
+              write(app, output, received_message)
+            rescue Beefcake::Message::WrongTypeError, Beefcake::Message::RequiredFieldNotSetError, Beefcake::Message::InvalidValueError
+              output.puts("Error parsing data. Please ensure your gem is the latest version.")
+              ws.close
+              @em_client_thread.kill
+            end
           end
-        end
 
-        ws.on :error do |event|
-          @config.output.puts("Server error")
-          @config.output.puts(event.data.inspect) if trace
-        end
-
-        ws.on :close do |event|
-          ws.close
-          case event.code
-            when 4000
-              @config.output.puts("Error: No space given.")
-            when 4001
-              @config.output.puts("Error: No authorization token given.")
-            when 4002
-              @config.output.puts("Error: Not authorized.")
+          ws.on :error do |event|
+            if !redirect_uri
+              if event.current_target.status == 302
+                redirect_uri = event.current_target.headers["location"]
+                ws.close
+                @em_client_thread.kill
+                ws = nil
+              else
+                output.puts("Server error: #{websocket_address}")
+                output.puts(event.data.inspect) if trace
+              end
+              end
           end
-          @config.output.puts("Server dropped connection...goodbye.")
-          EM.stop
-          ws = nil
-        end
-      }
+
+          ws.on :close do |event|
+            unless redirect_uri
+              ws.close
+              case event.code
+                when 4000
+                  output.puts("Error: No space given.")
+                when 4001
+                  output.puts("Error: No authorization token given.")
+                when 4002
+                  output.puts("Error: Not authorized.")
+              end
+              output.puts("Server dropped connection...goodbye.")
+              @em_client_thread.kill
+              ws = nil
+            end
+          end
+        }
+      end
+
+      wait_for_em_thread_to_finish
+
+      make_websocket_request(app, redirect_uri) if redirect_uri
+    end
+
+    def wait_for_em_thread_to_finish
+      while @em_client_thread.alive? do
+        sleep 0.1
+      end
     end
 
     private
 
     attr_reader :config
 
-    delegate :output, :loggregator_host, :user_token, :trace, :use_ssl,
+    delegate :output, :loggregator_host, :loggregator_port, :user_token, :trace, :use_ssl,
              to: :config
 
     def keep_alive_interval

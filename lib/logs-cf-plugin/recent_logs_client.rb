@@ -9,24 +9,9 @@ module LogsCfPlugin
 
     def logs_for(app)
       prefix = use_ssl ? 'https' : 'http'
-      uri = "#{prefix}://#{loggregator_host}/dump/?app=#{app.guid}"
-      response = make_dump_request(uri)
-
-      case response.code
-        when "200"
-        # fall thru
-        when "302"
-          response = make_dump_request(response['location'])
-        when "401"
-          output.puts("Unauthorized")
-          return
-        when "404"
-          output.puts("App #{app.name} not found")
-          return
-        else
-          output.puts("Error connecting to server #{response.code}")
-          return
-      end
+      uri = "#{prefix}://#{loggregator_host}#{loggregator_port ? ":#{loggregator_port}" : ""}/dump/?app=#{app.guid}"
+      response = make_dump_request(uri, app)
+      return unless response
 
       response_bytes = StringIO.new(response.body)
       messages = []
@@ -57,10 +42,10 @@ module LogsCfPlugin
 
     attr_reader :config
 
-    delegate :output, :loggregator_host, :user_token, :trace, :use_ssl,
+    delegate :output, :loggregator_host, :loggregator_port, :user_token, :trace, :use_ssl,
              to: :config
 
-    def make_dump_request(uri)
+    def make_dump_request(uri, app)
       uri = URI.parse(uri)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = use_ssl
@@ -80,7 +65,23 @@ module LogsCfPlugin
       end
 
       response = http.request(request)
-response
+
+      case response.code
+        when "200"
+          return response
+        when "302"
+          response = make_dump_request(response['location'], app)
+          return response
+        when "401"
+          output.puts("Unauthorized")
+          return
+        when "404"
+          output.puts("App #{app.name} not found")
+          return
+        else
+          output.puts("Error connecting to server #{response.code}")
+          return
+      end
     end
 
     def sane_headers(obj)

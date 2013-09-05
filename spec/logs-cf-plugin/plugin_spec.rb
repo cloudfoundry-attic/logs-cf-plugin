@@ -28,12 +28,23 @@ describe LogsCfPlugin::Plugin do
     stub_plugin_client_to_prevent_test_failure_on_travis
   end
 
-  it "should new up a loggregator client correctly" do
+  it "should new up a tailing loggregator client correctly with port set to 4443" do
     config = double("config")
     mock_loggreator_client = double().as_null_object
 
-    LogsCfPlugin::ClientConfig.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, true).and_return(config)
+    LogsCfPlugin::ClientConfig.should_receive(:new).with("stubbed host", 4443, "auth_header", STDOUT, false, true).and_return(config)
     LogsCfPlugin::TailingLogsClient.should_receive(:new).with(config).and_return(mock_loggreator_client)
+
+    plugin.logs
+  end
+
+  it "should new up a dumping loggregator client correctly with port set to nil" do
+    plugin.input.merge!({recent: true})
+    config = double("config")
+    mock_loggreator_client = double().as_null_object
+
+    LogsCfPlugin::ClientConfig.should_receive(:new).with("stubbed host", nil, "auth_header", STDOUT, false, true).and_return(config)
+    LogsCfPlugin::RecentLogsClient.should_receive(:new).with(config).and_return(mock_loggreator_client)
 
     plugin.logs
   end
@@ -42,7 +53,7 @@ describe LogsCfPlugin::Plugin do
     stub_plugin_client_to_prevent_test_failure_on_travis(false)
     LogsCfPlugin::TailingLogsClient.any_instance.stub(:logs_for)
 
-    LogsCfPlugin::ClientConfig.should_receive(:new).with("stubbed host", "auth_header", STDOUT, false, false)
+    LogsCfPlugin::ClientConfig.should_receive(:new).with("stubbed host", 4443, "auth_header", STDOUT, false, false)
 
     plugin.logs
   end

@@ -26,8 +26,8 @@ module LogsCfPlugin
         Mothership::Help.command_help(@@commands[:logs])
         fail "Please provide an application to log."
       end
-
-      client_config = ClientConfig.new(loggregator_host, client.token.auth_header, STDOUT, input[:trace], use_ssl)
+      port = input[:recent] ? nil : 4443
+      client_config = ClientConfig.new(loggregator_host, port, client.token.auth_header, STDOUT, input[:trace], use_ssl)
 
       client_clazz = input[:recent] ? RecentLogsClient : TailingLogsClient
       client_clazz.new(client_config).logs_for(input[:app])
