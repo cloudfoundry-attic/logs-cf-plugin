@@ -14,7 +14,7 @@ module LogsCfPlugin
     include LoginRequirements
     include MessageWriter
 
-    desc "Tail or dump logs for CF applications or spaces"
+    desc "Tail or dump logs for CF applications"
     group :apps
     input :app, :desc => "App to tail logs from", :argument => :optional, :from_given => by_name(:app)
     input :recent, :type => :boolean, :desc => "Dump recent logs instead of tailing", :default => false
