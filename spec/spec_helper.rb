@@ -11,3 +11,9 @@ RSpec.configure do |config|
 
   config.order = 'random'
 end
+
+TEST_TIME = 1378936582 # 2013-09-11 15:56:22 -0600
+
+def test_time
+  Time.at(TEST_TIME).strftime("%b %d %H:%M:%S")
+end

@@ -125,7 +125,7 @@ module LogsCfPlugin
 
     def log_message(type = LogMessage::MessageType::OUT)
       message = LogMessage.new()
-      message.timestamp = Time.now.to_i * 1000 * 1000 * 1000
+      message.timestamp = TEST_TIME
       message.message = "Hello"
       message.message_type = type
       message.app_id = "1234"

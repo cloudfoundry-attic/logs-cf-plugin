@@ -11,6 +11,7 @@ def log_message(type)
   message.app_id = "1234"
   message.source_type = 2
   message.source_id = 12
+  message.timestamp = TEST_TIME
   message
 end
 
@@ -24,12 +25,12 @@ describe MessageWriter do
 
   it 'shows the full message' do
     subject.write(app, output, log_message(LogMessage::MessageType::OUT))
-    expect(output.string).to eql "app_name CF[Router] 12 STDOUT Hello\n"
+    expect(output.string).to eql "#{test_time} app_name CF[Router] 12 STDOUT Hello\n"
   end
 
   it 'colorizes messages with source of stderr' do
     subject.write(app, output, log_message(LogMessage::MessageType::ERR))
-    expect(output.string).to include "\e[35mapp_name CF[Router] 12 STDERR Hello\e[0m\n"
+    expect(output.string).to include "\e[35m#{test_time} app_name CF[Router] 12 STDERR Hello\e[0m\n"
   end
 
   it 'removes trailing newlines from the message' do
@@ -37,6 +38,6 @@ describe MessageWriter do
     message.message = "Hello\n"
 
     subject.write(app, output, message)
-    expect(output.string).to include "\e[35mapp_name CF[Router] 12 STDERR Hello\e[0m\n"
+    expect(output.string).to include "\e[35m#{test_time} app_name CF[Router] 12 STDERR Hello\e[0m\n"
   end
 end

@@ -26,8 +26,8 @@ describe LogsCfPlugin::RecentLogsClient do
 
       output = fake_output.string.split("\n")
 
-      expect(output[0]).to eq "app_name CF[DEA]  STDOUT Some data"
-      expect(output[1]).to eq "app_name CF[DEA]  STDOUT More stuff"
+      expect(output[0]).to include "app_name CF[DEA]  STDOUT Some data"
+      expect(output[1]).to include "app_name CF[DEA]  STDOUT More stuff"
     end
 
     it "colors the stderr messages" do
@@ -37,9 +37,10 @@ describe LogsCfPlugin::RecentLogsClient do
 
       output = fake_output.string.split("\n")
 
-      expect(output[0]).to eq "\e[35mapp_name CF[DEA]  STDERR Some data\e[0m"
-      expect(output[1]).to eq "\e[35mapp_name CF[DEA]  STDERR More stuff\e[0m"
+      expect(output[0]).to match /\e\[35m.*STDERR Some data\e\[0m/
+      expect(output[1]).to match /\e\[35m.*STDERR More stuff\e\[0m/
     end
+
 
     it "outputs message the auth code is invalid" do
       loggregator_client = described_class.new(LogsCfPlugin::ClientConfig.new("localhost", 8000, "bad_auth_token", fake_output, false))
@@ -75,8 +76,8 @@ describe LogsCfPlugin::RecentLogsClient do
 
         output = fake_output.string.split("\n")
 
-        expect(output[0]).to eq "app_name CF[DEA]  STDOUT Some data"
-        expect(output[1]).to eq "app_name CF[DEA]  STDOUT More stuff"
+        expect(output[0]).to include "app_name CF[DEA]  STDOUT Some data"
+        expect(output[1]).to include "app_name CF[DEA]  STDOUT More stuff"
       end
     end
 

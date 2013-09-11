@@ -43,7 +43,7 @@ describe LogsCfPlugin::TailingLogsClient do
         client.logs_for(app)
       end
 
-      expect(server_response).to eq("Connected to server.\napp_name CF[DEA] 5678 STDOUT Hello\n")
+      expect(server_response).to eq("Connected to server.\n#{test_time} app_name CF[DEA] 5678 STDOUT Hello\n")
 
       Thread.kill(client_thread)
     end
@@ -54,7 +54,7 @@ describe LogsCfPlugin::TailingLogsClient do
         client.logs_for(app)
       end
 
-      expect(server_response).to eq("Connected to server.\n\e[35mapp_name CF[DEA] 5678 STDERR Hello\e[0m\n")
+      expect(server_response).to eq("Connected to server.\n\e[35m#{test_time} app_name CF[DEA] 5678 STDERR Hello\e[0m\n")
 
       Thread.kill(client_thread)
     end
@@ -67,7 +67,7 @@ describe LogsCfPlugin::TailingLogsClient do
           client.logs_for(app)
         end
 
-        expect(server_response).to eq("Connected to server.\napp_name CF[DEA] 5678 STDOUT Hello\n")
+        expect(server_response).to eq("Connected to server.\n#{test_time} app_name CF[DEA] 5678 STDOUT Hello\n")
 
         Thread.kill(client_thread)
       end
@@ -81,7 +81,7 @@ describe LogsCfPlugin::TailingLogsClient do
           client.logs_for(app)
         end
 
-        expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?app=app_id\nConnected to server.\napp_name CF[DEA] 5678 STDOUT Hello\n")
+        expect(server_response).to eq("websocket_address: wss://localhost:4443/tail/?app=app_id\nConnected to server.\n#{test_time} app_name CF[DEA] 5678 STDOUT Hello\n")
 
         Thread.kill(client_thread)
       end
