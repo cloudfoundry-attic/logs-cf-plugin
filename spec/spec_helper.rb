@@ -12,8 +12,8 @@ RSpec.configure do |config|
   config.order = 'random'
 end
 
-TEST_TIME = 1378936582 # 2013-09-11 15:56:22 -0600
+TEST_TIME = 1379025677549451000 # Sep 12 16:41:17.549451 -0600
 
 def test_time
-  Time.at(TEST_TIME).strftime("%b %d %H:%M:%S")
+  Time.at(TEST_TIME/1000000000.0).strftime("%b %d %H:%M:%S.%3N")
 end

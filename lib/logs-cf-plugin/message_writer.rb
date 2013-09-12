@@ -9,7 +9,7 @@ module MessageWriter
     output.puts(msg)
   end
 
-  def format_time(timestamp)
-    Time.at(timestamp).strftime("%b %d %H:%M:%S")
+  def format_time(timestamp_nsec)
+    Time.at(timestamp_nsec/1000000000.0).strftime("%b %d %H:%M:%S.%3N")
   end
 end
