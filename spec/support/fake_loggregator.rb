@@ -89,7 +89,7 @@ module LogsCfPlugin
         `lsof -w -i :#{port} | grep LISTEN`
         break if $?.exitstatus > 0
         tries += 1
-        raise "Needed port didn't free up#{port}" if tries > 50
+        raise "Needed port didn't free up: #{port}" if tries > 50
         sleep(0.2)
       end
 
@@ -125,8 +125,8 @@ module LogsCfPlugin
 
     def log_message(type = LogMessage::MessageType::OUT)
       message = LogMessage.new()
-      message.timestamp = TEST_TIME
       message.message = "Hello"
+      message.time = Time.now
       message.message_type = type
       message.app_id = "1234"
       message.source_id = "5678"
