@@ -31,12 +31,12 @@ describe MessageWriter do
 
   it 'shows the full message' do
     subject.write(app, output, log_message(LogMessage::MessageType::OUT))
-    expect(output.string).to eql "#{formatted_test_time} app_name CF[Router] 12 STDOUT Hello\n"
+    expect(output.string).to eql "#{formatted_test_time} app_name CF[Router/12] STDOUT Hello\n"
   end
 
   it 'colorizes messages with source of stderr' do
     subject.write(app, output, log_message(LogMessage::MessageType::ERR))
-    expect(output.string).to include "\e[35m#{formatted_test_time} app_name CF[Router] 12 STDERR Hello\e[0m\n"
+    expect(output.string).to include "\e[35m#{formatted_test_time} app_name CF[Router/12] STDERR Hello\e[0m\n"
   end
 
   it 'removes trailing newlines from the message' do
@@ -44,6 +44,15 @@ describe MessageWriter do
     message.message = "Hello\n"
 
     subject.write(app, output, message)
-    expect(output.string).to include "\e[35m#{formatted_test_time} app_name CF[Router] 12 STDERR Hello\e[0m\n"
+    expect(output.string).to include "\e[35m#{formatted_test_time} app_name CF[Router/12] STDERR Hello\e[0m\n"
+  end
+
+  it 'removes trailing newlines from the message' do
+    message = log_message(LogMessage::MessageType::ERR)
+    message.source_id = nil
+    message.message = "Hello\n"
+
+    subject.write(app, output, message)
+    expect(output.string).to include "\e[35m#{formatted_test_time} app_name CF[Router] STDERR Hello\e[0m\n"
   end
 end

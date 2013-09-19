@@ -26,8 +26,8 @@ describe LogsCfPlugin::RecentLogsClient do
 
       output = fake_output.string.split("\n")
 
-      expect(output[0]).to include "app_name CF[DEA]  STDOUT Some data"
-      expect(output[1]).to include "app_name CF[DEA]  STDOUT More stuff"
+      expect(output[0]).to include "app_name CF[DEA] STDOUT Some data"
+      expect(output[1]).to include "app_name CF[DEA] STDOUT More stuff"
     end
 
     it "colors the stderr messages" do
@@ -76,8 +76,8 @@ describe LogsCfPlugin::RecentLogsClient do
 
         output = fake_output.string.split("\n")
 
-        expect(output[0]).to include "app_name CF[DEA]  STDOUT Some data"
-        expect(output[1]).to include "app_name CF[DEA]  STDOUT More stuff"
+        expect(output[0]).to include "app_name CF[DEA] STDOUT Some data"
+        expect(output[1]).to include "app_name CF[DEA] STDOUT More stuff"
       end
     end
 

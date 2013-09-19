@@ -43,7 +43,7 @@ describe LogsCfPlugin::TailingLogsClient do
         client.logs_for(app)
       end
 
-      expect(server_response).to match /\AConnected to server\.\n.* app_name CF\[DEA\] 5678 STDOUT Hello\n\z/
+      expect(server_response).to match /\AConnected to server\.\n.* app_name CF\[DEA\/5678\] STDOUT Hello\n\z/
 
       Thread.kill(client_thread)
     end
@@ -54,7 +54,7 @@ describe LogsCfPlugin::TailingLogsClient do
         client.logs_for(app)
       end
 
-      expect(server_response).to match /\AConnected to server\.\n\e\[35m.* app_name CF\[DEA\] 5678 STDERR Hello\e\[0m\n\z/
+      expect(server_response).to match /\AConnected to server\.\n\e\[35m.* app_name CF\[DEA\/5678\] STDERR Hello\e\[0m\n\z/
 
       Thread.kill(client_thread)
     end
@@ -67,7 +67,7 @@ describe LogsCfPlugin::TailingLogsClient do
           client.logs_for(app)
         end
 
-        expect(server_response).to match /\AConnected to server\.\n.* app_name CF\[DEA\] 5678 STDOUT Hello\n\z/
+        expect(server_response).to match /\AConnected to server\.\n.* app_name CF\[DEA\/5678\] STDOUT Hello\n\z/
 
         Thread.kill(client_thread)
       end
