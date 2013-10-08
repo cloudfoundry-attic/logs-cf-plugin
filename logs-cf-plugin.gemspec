@@ -16,8 +16,8 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
 
+  spec.post_install_message = "+"*60 +
+      "\nThe logs-cf-plugin gem is deprecated. Please use the new CLI\nto access application logging.\n\n  URL: https://github.com/cloudfoundry/cli\n" + "+"*60 + "\n\n"
+
   spec.add_dependency "cf", "~> 5.0"
-  spec.add_dependency "faye-websocket", "~> 0.6.1"
-  spec.add_dependency "beefcake", "~> 0.3.7"
-  spec.add_dependency "loggregator_messages", "~> 0.1.0.pre"
 end
